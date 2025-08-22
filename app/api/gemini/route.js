@@ -1,0 +1,149 @@
+import { NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
+import sharp from "sharp";
+
+export const config = { api: { bodyParser: false } };
+
+// ----------- Helper: Metadata Parser -----------
+function parseMetadata(text) {
+  const titleMatch = text.match(/Title:\s*(.+)/i);
+  const keywordsMatch = text.match(
+    /Keywords:\s*([\s\S]+?)\n(?:Description:|Category:)/i
+  );
+  const descMatch = text.match(
+    /Description:\s*([\s\S]+?)(?:\nCategory:|\n?$)/i
+  );
+  const categoryMatch = text.match(/Category:\s*([\s\S]+)/i);
+
+  const keywords = keywordsMatch
+    ? keywordsMatch[1]
+        .split(/,|\n|•|-/)
+        .map((k) => k.trim())
+        .filter(Boolean)
+    : [];
+
+  const categories = categoryMatch
+    ? categoryMatch[1]
+        .split(/,|\n|•|-/)
+        .map((c) => c.trim())
+        .filter(Boolean)
+    : [];
+
+  return {
+    title: titleMatch ? titleMatch[1].trim() : "No title available",
+    keywords: keywords.length ? keywords : ["No keywords available"],
+    description: descMatch ? descMatch[1].trim() : "No description available",
+    category: categories.length ? categories : ["Uncategorized"],
+  };
+}
+
+// ----------- API Route -----------
+export async function POST(req) {
+  try {
+    if (!req.headers.get("content-type")?.includes("multipart/form-data")) {
+      return NextResponse.json(
+        { error: "Content-Type must be multipart/form-data" },
+        { status: 400 }
+      );
+    }
+
+    const formData = await req.formData();
+    const file = formData.get("file");
+
+    // Convert formData fields safely
+    const mode = formData.get("mode") || "meta";
+    const minTitle = Number(formData.get("minTitle")) || 6;
+    const maxTitle = Number(formData.get("maxTitle")) || 18;
+    const minKeywords = Number(formData.get("minKeywords")) || 43;
+    const maxKeywords = Number(formData.get("maxKeywords")) || 48;
+    const minDesc = Number(formData.get("minDesc")) || 12;
+    const maxDesc = Number(formData.get("maxDesc")) || 30;
+
+    if (!file || typeof file.arrayBuffer !== "function") {
+      return NextResponse.json(
+        { error: "No valid file uploaded" },
+        { status: 400 }
+      );
+    }
+
+    // ---- Convert uploaded file ----
+    const arrayBuffer = await file.arrayBuffer();
+    let buffer = Buffer.from(arrayBuffer);
+    let mimeType = file.type || "image/jpeg";
+
+    // EPS or PostScript or SVG → convert to PNG
+    if (
+      mimeType === "application/postscript" ||
+      file.name?.toLowerCase().endsWith(".eps") ||
+      mimeType === "image/svg+xml" ||
+      file.name?.toLowerCase().endsWith(".svg")
+    ) {
+      try {
+        buffer = await sharp(buffer).png().toBuffer();
+        mimeType = "image/png";
+      } catch (err) {
+        const errorType = mimeType.includes("svg") ? "SVG" : "EPS";
+        return NextResponse.json(
+          { error: `Failed to convert ${errorType} to PNG`, details: err.message },
+          { status: 500 }
+        );
+      }
+    }
+
+    const base64Image = buffer.toString("base64");
+
+    // ---- Initialize Gemini ----
+    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+
+    const contents = [
+      {
+        inlineData: {
+          mimeType: mimeType,
+          data: base64Image,
+        },
+      },
+      {
+        text: `Analyze this ${mimeType} image and generate comprehensive metadata for ${mode} mode.
+        
+Respond EXACTLY in this format:
+Title: <title>
+Keywords: <comma-separated keywords>
+Description: <description>
+Category: <comma-separated categories>
+
+Requirements:
+- Title: ${minTitle}-${maxTitle} words
+- Keywords: ${minKeywords}-${maxKeywords} items
+- Description: ${minDesc}-${maxDesc} words
+- Be accurate and descriptive`,
+      },
+    ];
+
+    // ---- Call Gemini ----
+    const response = await ai.models.generateContent({
+      model: "gemini-1.5-flash-latest",
+      contents: contents,
+    });
+
+    const resultText = response.text || "No response text";
+    const meta = parseMetadata(resultText);
+
+    return NextResponse.json({
+      metadata: {
+        filename: file.name || "uploaded_file",
+        mimeType: mimeType,
+        ...meta,
+      },
+      prompt: `Image about "${meta.title}" with keywords: ${meta.keywords
+        .slice(0, 3)
+        .join(", ")}.`,
+      rawResponse: resultText,
+    });
+  } catch (error) {
+    console.error("Error processing files:", error);
+    return NextResponse.json(
+      { error: "Failed to process file", details: error.message },
+      { status: 500 }
+    );
+  }
+}
