@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "NEXT_DEBUG=true next build --turbopack",
+    "build": "cross-env NEXT_DEBUG=true next build --turbopack",
     "start": "next start",
     "lint": "eslint"
   },
@@ -31,6 +31,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "cross-env": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.0",
     "tailwindcss": "^4.1.12"

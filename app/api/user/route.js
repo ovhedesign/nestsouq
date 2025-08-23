@@ -1,6 +1,8 @@
 import { getDb } from "@/lib/mongodb-admin";
 import { NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(req) {
   try {
     const { uid, email, displayName, photoURL } = await req.json();

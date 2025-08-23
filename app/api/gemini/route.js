@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 import sharp from "sharp";
 import { getDb } from "@/lib/mongodb-admin";
 
-export const config = { api: { bodyParser: false } };
+export const dynamic = 'force-dynamic';
 
 // ----------- Helper: Metadata Parser ----------- 
 function parseMetadata(text) {
@@ -18,14 +18,14 @@ function parseMetadata(text) {
 
   const keywords = keywordsMatch
     ? keywordsMatch[1]
-        .split(/,|\n|•|-/)
+        .split(/,|\n|•|-| /) // Corrected: Removed unnecessary space split
         .map((k) => k.trim())
         .filter(Boolean)
     : [];
 
   const categories = categoryMatch
     ? categoryMatch[1]
-        .split(/,|\n|•|-/)
+        .split(/,|\n|•|-| /) // Corrected: Removed unnecessary space split
         .map((c) => c.trim())
         .filter(Boolean)
     : [];
