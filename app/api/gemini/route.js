@@ -5,6 +5,10 @@ import { getDb } from "@/lib/mongodb-admin";
 
 export const dynamic = 'force-dynamic';
 
+export async function GET(req) {
+  return NextResponse.json({ success: true, message: "GET request successful" });
+}
+
 // ----------- Helper: Metadata Parser ----------- 
 function parseMetadata(text) {
   const titleMatch = text.match(/Title:\s*(.+)/i);
@@ -18,14 +22,14 @@ function parseMetadata(text) {
 
   const keywords = keywordsMatch
     ? keywordsMatch[1]
-        .split(/,|\n|•|-| /) // Corrected: Removed unnecessary space split
+        .split(/,|\n|•|-/) // Corrected: Removed unnecessary space split
         .map((k) => k.trim())
         .filter(Boolean)
     : [];
 
   const categories = categoryMatch
     ? categoryMatch[1]
-        .split(/,|\n|•|-| /) // Corrected: Removed unnecessary space split
+        .split(/,|\n|•|-/) // Corrected: Removed unnecessary space split
         .map((c) => c.trim())
         .filter(Boolean)
     : [];
