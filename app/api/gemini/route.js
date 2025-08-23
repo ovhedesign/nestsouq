@@ -5,11 +5,7 @@ import { getDb } from "@/lib/mongodb-admin";
 
 export const dynamic = 'force-dynamic';
 
-export async function GET(req) {
-  return NextResponse.json({ success: true, message: "GET request successful" });
-}
-
-// ----------- Helper: Metadata Parser ----------- 
+// ----------- Helper: Metadata Parser -----------
 function parseMetadata(text) {
   const titleMatch = text.match(/Title:\s*(.+)/i);
   const keywordsMatch = text.match(
@@ -22,14 +18,14 @@ function parseMetadata(text) {
 
   const keywords = keywordsMatch
     ? keywordsMatch[1]
-        .split(/,|\n|•|-/) // Corrected: Removed unnecessary space split
+        .split(/,|\n|•|-/)
         .map((k) => k.trim())
         .filter(Boolean)
     : [];
 
   const categories = categoryMatch
     ? categoryMatch[1]
-        .split(/,|\n|•|-/) // Corrected: Removed unnecessary space split
+        .split(/,|\n|•|-/)
         .map((c) => c.trim())
         .filter(Boolean)
     : [];
@@ -42,7 +38,7 @@ function parseMetadata(text) {
   };
 }
 
-// ----------- API Route ----------- 
+// ----------- API Route -----------
 export async function POST(req) {
   try {
     if (!req.headers.get("content-type")?.includes("multipart/form-data")) {

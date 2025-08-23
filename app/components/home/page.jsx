@@ -1,11 +1,17 @@
-'use client';
-import React, { useState, useEffect, useRef, useReducer, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import logo from './logo.svg';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/hooks';
-import { googleSignOut } from '@/lib/auth';
+"use client";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useReducer,
+  useCallback,
+} from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import logo from "./logo.svg";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/hooks";
+import { googleSignOut } from "@/lib/auth";
 import {
   Upload,
   CheckCircle2,
@@ -16,16 +22,17 @@ import {
   LogOut,
   Coins,
   ChevronDown,
-} from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
-import { SliderRow } from '@/components/ui/Slider';
-import { ResultCard } from '@/components/ui/ResultCard';
-import { ACCEPTED } from '@/lib/utils';
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
+import { SliderRow } from "@/components/ui/Slider";
+import { ResultCard } from "@/components/ui/ResultCard";
+import { ACCEPTED } from "@/lib/utils";
+import Link from "next/link";
 
 // --- Reducer ---
 const initialState = {
-  mode: 'meta', // meta or prompt
+  mode: "meta", // meta or prompt
   minTitle: 6,
   maxTitle: 18,
   minKw: 43,
@@ -36,26 +43,26 @@ const initialState = {
   previews: [], // [{ name, url }]
   fileResults: [], // results for UI
   loading: false,
-  errorMsg: '',
+  errorMsg: "",
 };
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'SET_MODE':
+    case "SET_MODE":
       return { ...state, mode: action.payload };
-    case 'SET_SLIDER':
+    case "SET_SLIDER":
       return { ...state, [action.payload.key]: action.payload.value };
-    case 'SET_FILES':
+    case "SET_FILES":
       return { ...state, files: action.payload };
-    case 'SET_PREVIEWS':
+    case "SET_PREVIEWS":
       return { ...state, previews: action.payload };
-    case 'SET_FILE_RESULTS':
+    case "SET_FILE_RESULTS":
       return { ...state, fileResults: action.payload };
-    case 'SET_LOADING':
+    case "SET_LOADING":
       return { ...state, loading: action.payload };
-    case 'SET_ERROR_MSG':
+    case "SET_ERROR_MSG":
       return { ...state, errorMsg: action.payload };
-    case 'RESET_SLIDERS':
+    case "RESET_SLIDERS":
       return {
         ...state,
         minTitle: initialState.minTitle,
@@ -90,8 +97,9 @@ function UserDropdown({ user, userData }) {
           className="w-9 h-9 rounded-full"
         />
         <ChevronDown
-          className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''
-            }`}
+          className={`w-5 h-5 text-gray-400 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
         />
       </motion.button>
       <AnimatePresence>
@@ -116,7 +124,7 @@ function UserDropdown({ user, userData }) {
                   <span className="font-bold text-lg">{userData.credits}</span>
                 </div>
                 <Button
-                  onClick={() => router.push('/pricing')}
+                  onClick={() => router.push("/pricing")}
                   className="text-xs bg-amber-500 hover:bg-amber-600 text-black px-3 py-1"
                 >
                   Get More
@@ -155,21 +163,21 @@ export default function DashboardPage() {
 
     if (rejected.length) {
       dispatch({
-        type: 'SET_ERROR_MSG',
+        type: "SET_ERROR_MSG",
         payload: `Rejected ${rejected.length} file(s) — unsupported type.`,
       });
-      setTimeout(() => dispatch({ type: 'SET_ERROR_MSG', payload: '' }), 3000);
+      setTimeout(() => dispatch({ type: "SET_ERROR_MSG", payload: "" }), 3000);
     }
 
     if (accepted.length === 0) return;
 
-    dispatch({ type: 'SET_FILES', payload: [...state.files, ...accepted] });
+    dispatch({ type: "SET_FILES", payload: [...state.files, ...accepted] });
     const newPreviews = accepted.map((f) => ({
       name: f.name,
       url: URL.createObjectURL(f),
     }));
     dispatch({
-      type: 'SET_PREVIEWS',
+      type: "SET_PREVIEWS",
       payload: [...state.previews, ...newPreviews],
     });
   };
@@ -179,7 +187,7 @@ export default function DashboardPage() {
       state.previews.forEach((p) => {
         try {
           URL.revokeObjectURL(p.url);
-        } catch (e) { }
+        } catch (e) {}
       });
     };
   }, [state.previews]);
@@ -195,18 +203,18 @@ export default function DashboardPage() {
   const callGemini = async (file) => {
     try {
       const fd = new FormData();
-      fd.append('file', file, file.name);
-      fd.append('mode', state.mode);
-      fd.append('minTitle', String(state.minTitle));
-      fd.append('maxTitle', String(state.maxTitle));
-      fd.append('minKeywords', String(state.minKw));
-      fd.append('maxKeywords', String(state.maxKw));
-      fd.append('minDesc', String(state.minDesc));
-      fd.append('maxDesc', String(state.maxDesc));
-      fd.append('uid', user.uid);
+      fd.append("file", file, file.name);
+      fd.append("mode", state.mode);
+      fd.append("minTitle", String(state.minTitle));
+      fd.append("maxTitle", String(state.maxTitle));
+      fd.append("minKeywords", String(state.minKw));
+      fd.append("maxKeywords", String(state.maxKw));
+      fd.append("minDesc", String(state.minDesc));
+      fd.append("maxDesc", String(state.maxDesc));
+      fd.append("uid", user.uid);
 
-      const res = await fetch('/api/gemini', {
-        method: 'POST',
+      const res = await fetch("/api/gemini", {
+        method: "POST",
         body: fd,
       });
 
@@ -214,76 +222,81 @@ export default function DashboardPage() {
       if (!res.ok) {
         return {
           ok: false,
-          meta: data?.error || 'API Error',
+          meta: data?.error || "API Error",
           raw: JSON.stringify(data),
-          engine: 'gemini',
+          engine: "gemini",
         };
       }
 
       updateUserData({ credits: data.credits });
 
       const meta = data?.metadata || {};
-      const prompt = data?.prompt || '';
-      const raw = data?.rawResponse || '';
+      const prompt = data?.prompt || "";
+      const raw = data?.rawResponse || "";
 
       return {
         ok: true,
         file: meta.filename || file.name,
         meta: {
-          title: meta.title || 'No title available',
-          keywords: meta.keywords || ['No keywords available'],
-          description: meta.description || 'No description available',
-          category: meta.category || ['Uncategorized'],
+          title: meta.title || "No title available",
+          keywords: meta.keywords || ["No keywords available"],
+          description: meta.description || "No description available",
+          category: meta.category || ["Uncategorized"],
         },
         prompt,
         raw,
-        engine: 'gemini',
+        engine: "gemini",
       };
     } catch (err) {
-      console.error('callGemini error', err);
+      console.error("callGemini error", err);
       return {
         ok: false,
-        meta: err.message || 'Network error',
-        raw: '',
-        engine: 'gemini',
+        meta: err.message || "Network error",
+        raw: "",
+        engine: "gemini",
       };
     }
   };
 
   const processFiles = async () => {
     if (!user) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
     if (state.files.length === 0) {
-      dispatch({ type: 'SET_ERROR_MSG', payload: 'No files to process' });
-      setTimeout(() => dispatch({ type: 'SET_ERROR_MSG', payload: '' }), 2500);
+      dispatch({ type: "SET_ERROR_MSG", payload: "No files to process" });
+      setTimeout(() => dispatch({ type: "SET_ERROR_MSG", payload: "" }), 2500);
       return;
     }
 
     if (userData.credits < state.files.length) {
       dispatch({
-        type: 'SET_ERROR_MSG',
-        payload: 'Not enough credits. Please upgrade your plan.',
+        type: "SET_ERROR_MSG",
+        payload: "Not enough credits. Please upgrade your plan.",
       });
       setTimeout(() => {
-        dispatch({ type: 'SET_ERROR_MSG', payload: '' });
-        router.push('/pricing');
+        dispatch({ type: "SET_ERROR_MSG", payload: "" });
+        router.push("/pricing");
       }, 3000);
       return;
     }
 
-    dispatch({ type: 'SET_LOADING', payload: true });
+    dispatch({ type: "SET_LOADING", payload: true });
 
-    const initialResults = state.files.map(f => ({ file: f.name, ok: null, meta: 'Processing...', engine: 'gemini' }));
-    dispatch({ type: 'SET_FILE_RESULTS', payload: initialResults });
+    const initialResults = state.files.map((f) => ({
+      file: f.name,
+      ok: null,
+      meta: "Processing...",
+      engine: "gemini",
+    }));
+    dispatch({ type: "SET_FILE_RESULTS", payload: initialResults });
 
-    const promises = state.files.map(f => callGemini(f));
+    const promises = state.files.map((f) => callGemini(f));
     const results = await Promise.all(promises);
 
-    dispatch({ type: 'SET_FILE_RESULTS', payload: results });
-    dispatch({ type: 'SET_LOADING', payload: false });
+    dispatch({ type: "SET_FILE_RESULTS", payload: results });
+    dispatch({ type: "SET_LOADING", payload: false });
   };
 
   const downloadCsv = () => {
@@ -291,38 +304,38 @@ export default function DashboardPage() {
 
     const rows = [
       [
-        'filename',
-        'title',
-        'keywords',
-        'description',
-        'category',
-        'engine',
-        'ok',
+        "filename",
+        "title",
+        "keywords",
+        "description",
+        "category",
+        "engine",
+        "ok",
       ],
       ...state.fileResults.map((r) => [
         r.file,
-        r.meta?.title || '',
+        r.meta?.title || "",
         Array.isArray(r.meta?.keywords)
-          ? r.meta.keywords.join('|')
-          : r.meta?.keywords || '',
-        r.meta?.description || '',
+          ? r.meta.keywords.join("|")
+          : r.meta?.keywords || "",
+        r.meta?.description || "",
         Array.isArray(r.meta?.category)
-          ? r.meta.category.join('|')
-          : r.meta?.category || '',
-        r.engine || '',
-        r.ok ? 'ok' : 'error',
+          ? r.meta.category.join("|")
+          : r.meta?.category || "",
+        r.engine || "",
+        r.ok ? "ok" : "error",
       ]),
     ];
 
     const csv = rows
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
 
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'results.csv';
+    a.download = "results.csv";
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -331,82 +344,86 @@ export default function DashboardPage() {
 
   const removeFile = (idx) => {
     dispatch({
-      type: 'SET_FILES',
+      type: "SET_FILES",
       payload: state.files.filter((_, i) => i !== idx),
     });
     dispatch({
-      type: 'SET_PREVIEWS',
+      type: "SET_PREVIEWS",
       payload: state.previews.filter((_, i) => i !== idx),
     });
   };
 
   const removeResult = (idx) => {
     dispatch({
-      type: 'SET_FILE_RESULTS',
+      type: "SET_FILE_RESULTS",
       payload: state.fileResults.filter((_, i) => i !== idx),
     });
   };
 
   return (
-    <div className='min-h-screen bg-gray-950 text-white flex flex-col'>
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col">
       {/* Top Bar */}
-      <header className='flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-gray-900'>
+      <header className="flex items-center justify-between px-6 py-2 border-b border-gray-800 bg-gray-900">
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className='flex items-center gap-3'
+          className="flex items-center gap-3"
         >
           <div>
-            <Image alt='Nestsouq Logo' width={120} height={120} src={logo} />
+            <Link href="/">
+              <Image alt="Nestsouq Logo" width={90} height={90} src={logo} />
+            </Link>
           </div>
         </motion.div>
         {authLoading ? (
-          <Loader2 className='w-6 h-6 text-amber-400 animate-spin' />
+          <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
         ) : user && userData ? (
           <UserDropdown user={user} userData={userData} />
         ) : (
-          <div className='flex items-center gap-4'>
+          <div className="flex items-center gap-4">
             <Button
-              onClick={() => router.push('/login')}
-              className='bg-blue-500 hover:bg-blue-600'
+              onClick={() => router.push("/login")}
+              className="bg-blue-500 hover:bg-blue-600"
             >
               Login
             </Button>
             <Button
-              onClick={() => router.push('/pricing')} // Assuming a pricing page exists or will be created
-              className='bg-gray-700 hover:bg-gray-600'
+              onClick={() => router.push("/pricing")} // Assuming a pricing page exists or will be created
+              className="bg-gray-700 hover:bg-gray-600"
             >
               Pricing
             </Button>
           </div>
         )}
       </header>
-      <main className='flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6'>
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
         {/* LEFT */}
-        <aside className='lg:col-span-3 space-y-6'>
+        <aside className="lg:col-span-3 space-y-2">
           {/* Mode Selection */}
           <Card>
             <CardContent>
-              <h2 className='text-lg font-semibold mb-3'>Mode Selection</h2>
-              <div className='flex gap-3'>
+              <h2 className="text-lg font-semibold mb-3">Mode Selection</h2>
+              <div className="flex gap-3">
                 <Button
                   onClick={() =>
-                    dispatch({ type: 'SET_MODE', payload: 'meta' })
+                    dispatch({ type: "SET_MODE", payload: "meta" })
                   }
-                  className={`flex-1 border border-gray-700 ${state.mode === 'meta'
-                    ? 'bg-blue-500 text-white'
-                    : 'hover:bg-gray-800'
+                  className={`flex-1 border border-gray-700 ${
+                    state.mode === "meta"
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-gray-800"
                   }`}
                 >
                   Metadata
                 </Button>
                 <Button
                   onClick={() =>
-                    dispatch({ type: 'SET_MODE', payload: 'prompt' })
+                    dispatch({ type: "SET_MODE", payload: "prompt" })
                   }
-                  className={`flex-1 border border-gray-700 ${state.mode === 'prompt'
-                    ? 'bg-amber-500 text-black'
-                    : 'hover:bg-gray-800'
+                  className={`flex-1 border border-gray-700 ${
+                    state.mode === "prompt"
+                      ? "bg-amber-500 text-black"
+                      : "hover:bg-gray-800"
                   }`}
                 >
                   Prompt
@@ -416,162 +433,162 @@ export default function DashboardPage() {
           </Card>
           {/* Sliders */}
           <Card>
-            <CardContent className='space-y-5'>
-              <div className='flex items-center justify-between mb-1'>
-                <h2 className='text-lg font-semibold'>Customization</h2>
+            <CardContent className="space-y-5">
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="text-lg font-semibold">Customization</h2>
                 <Button
-                  onClick={() => dispatch({ type: 'RESET_SLIDERS' })}
-                  className='text-xs px-3 py-1 border border-gray-700 hover:bg-gray-800'
+                  onClick={() => dispatch({ type: "RESET_SLIDERS" })}
+                  className="text-xs px-3 py-1 border border-gray-700 hover:bg-gray-800"
                 >
                   Reset
                 </Button>
               </div>
               <SliderRow
-                label='Title Words'
-                hint='min & max'
+                label="Title Words"
+                hint="min & max"
                 min={1}
                 max={60}
                 valueMin={state.minTitle}
                 valueMax={state.maxTitle}
                 setValueMin={(value) =>
                   dispatch({
-                    type: 'SET_SLIDER',
-                    payload: { key: 'minTitle', value },
+                    type: "SET_SLIDER",
+                    payload: { key: "minTitle", value },
                   })
                 }
                 setValueMax={(value) =>
                   dispatch({
-                    type: 'SET_SLIDER',
-                    payload: { key: 'maxTitle', value },
+                    type: "SET_SLIDER",
+                    payload: { key: "maxTitle", value },
                   })
                 }
-                suffix='words'
+                suffix="words"
               />
               <SliderRow
-                label='Keywords Count'
-                hint='min & max'
+                label="Keywords Count"
+                hint="min & max"
                 min={1}
                 max={100}
                 valueMin={state.minKw}
                 valueMax={state.maxKw}
                 setValueMin={(value) =>
                   dispatch({
-                    type: 'SET_SLIDER',
-                    payload: { key: 'minKw', value },
+                    type: "SET_SLIDER",
+                    payload: { key: "minKw", value },
                   })
                 }
                 setValueMax={(value) =>
                   dispatch({
-                    type: 'SET_SLIDER',
-                    payload: { key: 'maxKw', value },
+                    type: "SET_SLIDER",
+                    payload: { key: "maxKw", value },
                   })
                 }
               />
               <SliderRow
-                label='Description Words'
-                hint='min & max'
+                label="Description Words"
+                hint="min & max"
                 min={1}
                 max={100}
                 valueMin={state.minDesc}
                 valueMax={state.maxDesc}
                 setValueMin={(value) =>
                   dispatch({
-                    type: 'SET_SLIDER',
-                    payload: { key: 'minDesc', value },
+                    type: "SET_SLIDER",
+                    payload: { key: "minDesc", value },
                   })
                 }
                 setValueMax={(value) =>
                   dispatch({
-                    type: 'SET_SLIDER',
-                    payload: { key: 'maxDesc', value },
+                    type: "SET_SLIDER",
+                    payload: { key: "maxDesc", value },
                   })
                 }
-                suffix='words'
+                suffix="words"
               />
             </CardContent>
           </Card>
           {/* Actions */}
           <Card>
-            <CardContent className='flex flex-col gap-3'>
+            <CardContent className="flex flex-col gap-3">
               <Button
                 onClick={processFiles}
                 disabled={state.loading || state.files.length === 0}
-                className='bg-amber-500 hover:bg-amber-600 flex items-center justify-center gap-2'
+                className="bg-amber-500 hover:bg-amber-600 flex items-center justify-center gap-2"
               >
                 {state.loading ? (
-                  <Loader2 className='w-4 h-4 animate-spin' />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
-                  <CheckCircle2 className='w-4 h-4' />
+                  <CheckCircle2 className="w-4 h-4" />
                 )}
-                {state.loading ? 'Processing...' : 'Process Files'}
+                {state.loading ? "Processing..." : "Process Files"}
               </Button>
               <Button
                 onClick={downloadCsv}
                 disabled={state.fileResults.length === 0}
-                className='bg-green-500 hover:bg-green-600 flex items-center justify-center gap-2'
+                className="bg-green-500 hover:bg-green-600 flex items-center justify-center gap-2"
               >
-                <Download className='w-4 h-4' /> Download CSV
+                <Download className="w-4 h-4" /> Download CSV
               </Button>
               {state.errorMsg && (
-                <p className='text-red-500 text-sm mt-2'>{state.errorMsg}</p>
+                <p className="text-red-500 text-sm mt-2">{state.errorMsg}</p>
               )}
             </CardContent>
           </Card>
         </aside>
         {/* RIGHT */}
-        <section className='lg:col-span-9 space-y-6'>
+        <section className="lg:col-span-9 space-y-6">
           {/* File Selection */}
           <Card>
             <CardContent>
-              <h2 className='text-lg font-semibold mb-2'>Selected Files</h2>
+              <h2 className="text-lg font-semibold mb-2">Selected Files</h2>
               <input
-                type='file'
+                type="file"
                 ref={inputRef}
                 multiple
-                accept={ACCEPTED.join(',')}
+                accept={ACCEPTED.join(",")}
                 onChange={(e) => {
                   handleSelected(e.target.files);
-                  e.target.value = '';
+                  e.target.value = "";
                 }}
-                className='hidden'
+                className="hidden"
               />
               <Button
                 onClick={() => inputRef.current?.click()}
-                className='bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2 mb-3'
+                className="bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2 mb-3"
               >
-                <Upload className='w-4 h-4' /> Select Files
+                <Upload className="w-4 h-4" /> Select Files
               </Button>
               <div
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={onDrop}
-                className='min-h-[120px] border-2 border-dashed border-gray-700 rounded-xl p-4 flex flex-wrap gap-3 items-center justify-start'
+                className="min-h-[120px] border-2 border-dashed border-gray-700 rounded-xl p-4 flex flex-wrap gap-3 items-center justify-start"
               >
                 {state.previews.length === 0 && (
-                  <p className='text-xs text-gray-500'>
+                  <p className="text-xs text-gray-500">
                     Drag & drop or select files
                   </p>
                 )}
                 {state.previews.map((p, idx) => (
                   <div
                     key={idx}
-                    className='w-20 h-20 relative border border-gray-700 rounded-lg overflow-hidden group'
+                    className="w-20 h-20 relative border border-gray-700 rounded-lg overflow-hidden group"
                   >
                     {p.url ? (
                       <img
                         src={p.url}
                         alt={p.name}
-                        className='w-full h-full object-cover'
+                        className="w-full h-full object-cover"
                       />
                     ) : (
-                      <FileImage className='w-full h-full text-gray-500 p-3' />
+                      <FileImage className="w-full h-full text-gray-500 p-3" />
                     )}
                     <button
                       onClick={() => removeFile(idx)}
-                      className='absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity'
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                     >
-                      <Trash2 className='w-3 h-3' />
+                      <Trash2 className="w-3 h-3" />
                     </button>
-                    <div className='absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-xs p-1 truncate'>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-xs p-1 truncate">
                       {p.name}
                     </div>
                   </div>
@@ -581,27 +598,27 @@ export default function DashboardPage() {
           </Card>
           {/* Results */}
           <Card>
-            <CardContent className='h-auto'>
-              <div className='flex justify-between items-center mb-4'>
-                <h2 className='text-2xl font-bold'>
-                  {state.mode === 'meta'
-                    ? 'Metadata Results'
-                    : 'Prompt Results'}
+            <CardContent className="h-auto">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-2xl font-bold">
+                  {state.mode === "meta"
+                    ? "Metadata Results"
+                    : "Prompt Results"}
                 </h2>
                 {state.fileResults.length > 0 && (
-                  <span className='text-sm text-gray-400'>
+                  <span className="text-sm text-gray-400">
                     {state.fileResults.length} result
-                    {state.fileResults.length !== 1 ? 's' : ''}
+                    {state.fileResults.length !== 1 ? "s" : ""}
                   </span>
                 )}
               </div>
               {state.fileResults.length === 0 ? (
-                <div className='text-center py-10 text-gray-500'>
-                  <FileImage className='w-16 h-16 mx-auto mb-4 opacity-50' />
+                <div className="text-center py-10 text-gray-500">
+                  <FileImage className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <p>No files processed yet. Select files and click Process.</p>
                 </div>
               ) : (
-                <div className='space-y-4 max-h-[600px] overflow-auto pr-2'>
+                <div className="space-y-4 max-h-[600px] overflow-auto pr-2">
                   {state.fileResults.map((f, idx) => {
                     const resultPreview = state.previews.find(
                       (p) => p.name === f.file
