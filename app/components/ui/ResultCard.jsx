@@ -49,10 +49,10 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
           </span>
           <span
             className={`font-bold text-sm ${
-              fileData.ok ? 'text-green-400' : 'text-red-400'
+              fileData.ok === true ? 'text-green-400' : fileData.ok === false ? 'text-red-400' : 'text-amber-400'
             }`}
           >
-            {fileData.ok ? '✅ OK' : '❌ Error'}
+            {fileData.ok === true ? '✅ OK' : fileData.ok === false ? '❌ Error' : 'Processing...'}
           </span>
           <span className="text-xs text-gray-400">{fileData.engine}</span>
         </div>

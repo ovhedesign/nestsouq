@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef, useReducer, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import logo from './logo.svg';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -15,6 +15,7 @@ import {
   Download,
   LogOut,
   Coins,
+  ChevronDown,
 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card, CardContent } from '@/components/ui/Card';
@@ -69,34 +70,71 @@ function reducer(state, action) {
   }
 }
 
-// --- User Display Component ---
-function UserDisplay({ user, userData }) {
+// --- User Dropdown Component ---
+function UserDropdown({ user, userData }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+
   if (!user || !userData) return null;
 
   return (
-    <div className='flex items-center gap-4'>
-      <div className='flex items-center gap-2 text-amber-400'>
-        <Coins className='w-5 h-5' />
-        <span className='font-bold text-lg'>{userData.credits}</span>
-      </div>
-      <div className='flex items-center gap-3'>
+    <div className="relative">
+      <motion.button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 rounded-full p-1 border-2 border-gray-700 hover:border-amber-400 transition-colors"
+        whileTap={{ scale: 0.95 }}
+      >
         <img
           src={user.photoURL}
           alt={user.displayName}
-          className='w-10 h-10 rounded-full border-2 border-gray-700'
+          className="w-9 h-9 rounded-full"
         />
-        <div>
-          <p className='font-semibold text-white'>{user.displayName}</p>
-          <p className='text-xs text-gray-400'>{user.email}</p>
-        </div>
-        <button
-          onClick={googleSignOut}
-          className='p-2 text-gray-400 hover:text-white hover:bg-gray-800 rounded-full transition-colors'
-          title='Sign Out'
-        >
-          <LogOut className='w-5 h-5' />
-        </button>
-      </div>
+        <ChevronDown
+          className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''
+            }`}
+        />
+      </motion.button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-10"
+          >
+            <div className="p-4 border-b border-gray-700">
+              <p className="font-semibold text-white truncate">
+                {user.displayName}
+              </p>
+              <p className="text-xs text-gray-400 truncate">{user.email}</p>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="flex items-center justify-between text-amber-400">
+                <div className="flex items-center gap-2">
+                  <Coins className="w-5 h-5" />
+                  <span className="font-bold text-lg">{userData.credits}</span>
+                </div>
+                <Button
+                  onClick={() => router.push('/pricing')}
+                  className="text-xs bg-amber-500 hover:bg-amber-600 text-black px-3 py-1"
+                >
+                  Get More
+                </Button>
+              </div>
+            </div>
+            <div className="p-2">
+              <button
+                onClick={googleSignOut}
+                className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-md transition-colors"
+              >
+                <LogOut className="w-5 h-5" />
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -141,7 +179,7 @@ export default function DashboardPage() {
       state.previews.forEach((p) => {
         try {
           URL.revokeObjectURL(p.url);
-        } catch (e) {}
+        } catch (e) { }
       });
     };
   }, [state.previews]);
@@ -224,33 +262,28 @@ export default function DashboardPage() {
       return;
     }
 
-    dispatch({ type: 'SET_LOADING', payload: true });
-    dispatch({ type: 'SET_FILE_RESULTS', payload: [] });
-    const results = [];
-
-    for (const f of state.files) {
+    if (userData.credits < state.files.length) {
       dispatch({
-        type: 'SET_FILE_RESULTS',
-        payload: [
-          ...results,
-          { file: f.name, ok: null, meta: 'Processing...', engine: 'gemini' },
-        ],
+        type: 'SET_ERROR_MSG',
+        payload: 'Not enough credits. Please upgrade your plan.',
       });
-
-      const res = await callGemini(f);
-
-      results.push(res);
-
-      dispatch({
-        type: 'SET_FILE_RESULTS',
-        payload: results.map((r, i) =>
-          i === results.length - 1 ? { ...res, file: res.file || f.name } : r
-        ),
-      });
+      setTimeout(() => {
+        dispatch({ type: 'SET_ERROR_MSG', payload: '' });
+        router.push('/pricing');
+      }, 3000);
+      return;
     }
 
+    dispatch({ type: 'SET_LOADING', payload: true });
+
+    const initialResults = state.files.map(f => ({ file: f.name, ok: null, meta: 'Processing...', engine: 'gemini' }));
+    dispatch({ type: 'SET_FILE_RESULTS', payload: initialResults });
+
+    const promises = state.files.map(f => callGemini(f));
+    const results = await Promise.all(promises);
+
+    dispatch({ type: 'SET_FILE_RESULTS', payload: results });
     dispatch({ type: 'SET_LOADING', payload: false });
-    return results;
   };
 
   const downloadCsv = () => {
@@ -330,7 +363,7 @@ export default function DashboardPage() {
         {authLoading ? (
           <Loader2 className='w-6 h-6 text-amber-400 animate-spin' />
         ) : user && userData ? (
-          <UserDisplay user={user} userData={userData} />
+          <UserDropdown user={user} userData={userData} />
         ) : (
           <div className='flex items-center gap-4'>
             <Button
