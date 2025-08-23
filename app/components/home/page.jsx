@@ -1,11 +1,11 @@
-'use client';
-import React, { useState, useEffect, useRef, useReducer } from 'react';
-import { motion } from 'framer-motion';
-import logo from './logo.svg';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/hooks';
-import { googleSignOut } from '@/lib/auth';
+"use client";
+import React, { useState, useEffect, useRef, useReducer } from "react";
+import { motion } from "framer-motion";
+import logo from "./logo.svg";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/hooks";
+import { googleSignOut } from "@/lib/auth";
 import {
   Upload,
   CheckCircle2,
@@ -15,16 +15,16 @@ import {
   Download,
   LogOut,
   Coins,
-} from 'lucide-react';
-import { Button } from '@/components/ui/Button';
-import { Card, CardContent } from '@/components/ui/Card';
-import { SliderRow } from '@/components/ui/Slider';
-import { ResultCard } from '@/components/ui/ResultCard';
-import { ACCEPTED } from '@/lib/utils';
+} from "lucide-react";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent } from "@/components/ui/Card";
+import { SliderRow } from "@/components/ui/Slider";
+import { ResultCard } from "@/components/ui/ResultCard";
+import { ACCEPTED } from "@/lib/utils";
 
 // --- Reducer ---
 const initialState = {
-  mode: 'meta', // meta or prompt
+  mode: "meta", // meta or prompt
   minTitle: 6,
   maxTitle: 18,
   minKw: 43,
@@ -35,26 +35,26 @@ const initialState = {
   previews: [], // [{ name, url }]
   fileResults: [], // results for UI
   loading: false,
-  errorMsg: '',
+  errorMsg: "",
 };
 
 function reducer(state, action) {
   switch (action.type) {
-    case 'SET_MODE':
+    case "SET_MODE":
       return { ...state, mode: action.payload };
-    case 'SET_SLIDER':
+    case "SET_SLIDER":
       return { ...state, [action.payload.key]: action.payload.value };
-    case 'SET_FILES':
+    case "SET_FILES":
       return { ...state, files: action.payload };
-    case 'SET_PREVIEWS':
+    case "SET_PREVIEWS":
       return { ...state, previews: action.payload };
-    case 'SET_FILE_RESULTS':
+    case "SET_FILE_RESULTS":
       return { ...state, fileResults: action.payload };
-    case 'SET_LOADING':
+    case "SET_LOADING":
       return { ...state, loading: action.payload };
-    case 'SET_ERROR_MSG':
+    case "SET_ERROR_MSG":
       return { ...state, errorMsg: action.payload };
-    case 'RESET_SLIDERS':
+    case "RESET_SLIDERS":
       return {
         ...state,
         minTitle: initialState.minTitle,
@@ -108,8 +108,6 @@ export default function DashboardPage() {
   const router = useRouter();
   const inputRef = useRef(null);
 
-  
-
   const handleSelected = (list) => {
     const arr = Array.from(list || []);
     if (arr.length === 0) return;
@@ -119,24 +117,21 @@ export default function DashboardPage() {
 
     if (rejected.length) {
       dispatch({
-        type: 'SET_ERROR_MSG',
+        type: "SET_ERROR_MSG",
         payload: `Rejected ${rejected.length} file(s) — unsupported type.`,
       });
-      setTimeout(
-        () => dispatch({ type: 'SET_ERROR_MSG', payload: '' }),
-        3000
-      );
+      setTimeout(() => dispatch({ type: "SET_ERROR_MSG", payload: "" }), 3000);
     }
 
     if (accepted.length === 0) return;
 
-    dispatch({ type: 'SET_FILES', payload: [...state.files, ...accepted] });
+    dispatch({ type: "SET_FILES", payload: [...state.files, ...accepted] });
     const newPreviews = accepted.map((f) => ({
       name: f.name,
       url: URL.createObjectURL(f),
     }));
     dispatch({
-      type: 'SET_PREVIEWS',
+      type: "SET_PREVIEWS",
       payload: [...state.previews, ...newPreviews],
     });
   };
@@ -162,17 +157,17 @@ export default function DashboardPage() {
   const callGemini = async (file) => {
     try {
       const fd = new FormData();
-      fd.append('file', file, file.name);
-      fd.append('mode', state.mode);
-      fd.append('minTitle', String(state.minTitle));
-      fd.append('maxTitle', String(state.maxTitle));
-      fd.append('minKeywords', String(state.minKw));
-      fd.append('maxKeywords', String(state.maxKw));
-      fd.append('minDesc', String(state.minDesc));
-      fd.append('maxDesc', String(state.maxDesc));
+      fd.append("file", file, file.name);
+      fd.append("mode", state.mode);
+      fd.append("minTitle", String(state.minTitle));
+      fd.append("maxTitle", String(state.maxTitle));
+      fd.append("minKeywords", String(state.minKw));
+      fd.append("maxKeywords", String(state.maxKw));
+      fd.append("minDesc", String(state.minDesc));
+      fd.append("maxDesc", String(state.maxDesc));
 
-      const res = await fetch('/api/gemini', {
-        method: 'POST',
+      const res = await fetch("/api/gemini", {
+        method: "POST",
         body: fd,
       });
 
@@ -180,65 +175,62 @@ export default function DashboardPage() {
       if (!res.ok) {
         return {
           ok: false,
-          meta: data?.error || 'API Error',
+          meta: data?.error || "API Error",
           raw: JSON.stringify(data),
-          engine: 'gemini',
+          engine: "gemini",
         };
       }
 
       const meta = data?.metadata || {};
-      const prompt = data?.prompt || '';
-      const raw = data?.rawResponse || '';
+      const prompt = data?.prompt || "";
+      const raw = data?.rawResponse || "";
 
       return {
         ok: true,
         file: meta.filename || file.name,
         meta: {
-          title: meta.title || 'No title available',
-          keywords: meta.keywords || ['No keywords available'],
-          description: meta.description || 'No description available',
-          category: meta.category || ['Uncategorized'],
+          title: meta.title || "No title available",
+          keywords: meta.keywords || ["No keywords available"],
+          description: meta.description || "No description available",
+          category: meta.category || ["Uncategorized"],
         },
         prompt,
         raw,
-        engine: 'gemini',
+        engine: "gemini",
       };
     } catch (err) {
-      console.error('callGemini error', err);
+      console.error("callGemini error", err);
       return {
         ok: false,
-        meta: err.message || 'Network error',
-        raw: '',
-        engine: 'gemini',
+        meta: err.message || "Network error",
+        raw: "",
+        engine: "gemini",
       };
     }
   };
 
   const processFiles = async () => {
     if (!user) {
-      router.push('/login');
+      router.push("/login");
       return;
     }
 
     if (state.files.length === 0) {
-      dispatch({ type: 'SET_ERROR_MSG', payload: 'No files to process' });
-      setTimeout(
-        () => dispatch({ type: 'SET_ERROR_MSG', payload: '' }),
-        2500
-      );
+      dispatch({ type: "SET_ERROR_MSG", payload: "No files to process" });
+      setTimeout(() => dispatch({ type: "SET_ERROR_MSG", payload: "" }), 2500);
       return;
     }
 
-    dispatch({ type: 'SET_LOADING', payload: true });
-    dispatch({ type: 'SET_FILE_RESULTS', payload: [] });
+    dispatch({ type: "SET_LOADING", payload: true });
+    dispatch({ type: "SET_FILE_RESULTS", payload: [] });
     const results = [];
 
     for (const f of state.files) {
       dispatch({
-        type: 'SET_FILE_RESULTS',
+        type: "SET_FILE_RESULTS",
         payload: [
           ...results,
-          { file: f.name, ok: null, meta: 'Processing...', engine: 'gemini' },
+          { file: f.name, ok: null, meta: "Processing...", engine: "gemini" },
         ],
       });
 
@@ -247,33 +239,37 @@ export default function DashboardPage() {
       if (res.ok) {
         try {
           const token = await user.getIdToken();
-          await fetch("/api/deduct-credit", {
+
+          const res = await fetch("/api/credit-deduct", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify({ amount: 1 }),
-          }).then(() => {
-            console.log("Credit deducted successfully");
           });
-        } catch (error) {
-          console.error("Credit deduction failed", error);
-          // Optionally handle UI feedback for failed deduction
+
+          if (!res.ok) {
+            throw new Error(`Failed to deduct credit: ${res.status}`);
+          }
+
+          console.log("Credit deducted successfully");
+        } catch (err) {
+          console.error("Error deducting credit:", err);
         }
       }
 
       results.push(res);
 
       dispatch({
-        type: 'SET_FILE_RESULTS',
+        type: "SET_FILE_RESULTS",
         payload: results.map((r, i) =>
           i === results.length - 1 ? { ...res, file: res.file || f.name } : r
         ),
       });
     }
 
-    dispatch({ type: 'SET_LOADING', payload: false });
+    dispatch({ type: "SET_LOADING", payload: false });
     return results;
   };
 
@@ -282,38 +278,38 @@ export default function DashboardPage() {
 
     const rows = [
       [
-        'filename',
-        'title',
-        'keywords',
-        'description',
-        'category',
-        'engine',
-        'ok',
+        "filename",
+        "title",
+        "keywords",
+        "description",
+        "category",
+        "engine",
+        "ok",
       ],
       ...state.fileResults.map((r) => [
         r.file,
-        r.meta?.title || '',
+        r.meta?.title || "",
         Array.isArray(r.meta?.keywords)
-          ? r.meta.keywords.join('|')
-          : r.meta?.keywords || '',
-        r.meta?.description || '',
+          ? r.meta.keywords.join("|")
+          : r.meta?.keywords || "",
+        r.meta?.description || "",
         Array.isArray(r.meta?.category)
-          ? r.meta.category.join('|')
-          : r.meta?.category || '',
-        r.engine || '',
-        r.ok ? 'ok' : 'error',
+          ? r.meta.category.join("|")
+          : r.meta?.category || "",
+        r.engine || "",
+        r.ok ? "ok" : "error",
       ]),
     ];
 
     const csv = rows
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .join("\n");
 
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'results.csv';
+    a.download = "results.csv";
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -322,18 +318,18 @@ export default function DashboardPage() {
 
   const removeFile = (idx) => {
     dispatch({
-      type: 'SET_FILES',
+      type: "SET_FILES",
       payload: state.files.filter((_, i) => i !== idx),
     });
     dispatch({
-      type: 'SET_PREVIEWS',
+      type: "SET_PREVIEWS",
       payload: state.previews.filter((_, i) => i !== idx),
     });
   };
 
   const removeResult = (idx) => {
     dispatch({
-      type: 'SET_FILE_RESULTS',
+      type: "SET_FILE_RESULTS",
       payload: state.fileResults.filter((_, i) => i !== idx),
     });
   };
@@ -358,13 +354,13 @@ export default function DashboardPage() {
         ) : (
           <div className="flex items-center gap-4">
             <Button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push("/login")}
               className="bg-blue-500 hover:bg-blue-600"
             >
               Login
             </Button>
             <Button
-              onClick={() => router.push('/pricing')} // Assuming a pricing page exists or will be created
+              onClick={() => router.push("/pricing")} // Assuming a pricing page exists or will be created
               className="bg-gray-700 hover:bg-gray-600"
             >
               Pricing
@@ -381,16 +377,26 @@ export default function DashboardPage() {
               <h2 className="text-lg font-semibold mb-3">Mode Selection</h2>
               <div className="flex gap-3">
                 <Button
-                  onClick={() => dispatch({ type: 'SET_MODE', payload: 'meta' })}
-                  className={`flex-1 border border-gray-700 ${state.mode === 'meta' ? 'bg-blue-500 text-white' : 'hover:bg-gray-800'}`}
+                  onClick={() =>
+                    dispatch({ type: "SET_MODE", payload: "meta" })
+                  }
+                  className={`flex-1 border border-gray-700 ${
+                    state.mode === "meta"
+                      ? "bg-blue-500 text-white"
+                      : "hover:bg-gray-800"
+                  }`}
                 >
                   Metadata
                 </Button>
                 <Button
                   onClick={() =>
-                    dispatch({ type: 'SET_MODE', payload: 'prompt' })
+                    dispatch({ type: "SET_MODE", payload: "prompt" })
                   }
-                  className={`flex-1 border border-gray-700 ${state.mode === 'prompt' ? 'bg-amber-500 text-black' : 'hover:bg-gray-800'}`}
+                  className={`flex-1 border border-gray-700 ${
+                    state.mode === "prompt"
+                      ? "bg-amber-500 text-black"
+                      : "hover:bg-gray-800"
+                  }`}
                 >
                   Prompt
                 </Button>
@@ -403,7 +409,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-1">
                 <h2 className="text-lg font-semibold">Customization</h2>
                 <Button
-                  onClick={() => dispatch({ type: 'RESET_SLIDERS' })}
+                  onClick={() => dispatch({ type: "RESET_SLIDERS" })}
                   className="text-xs px-3 py-1 border border-gray-700 hover:bg-gray-800"
                 >
                   Reset
@@ -418,14 +424,14 @@ export default function DashboardPage() {
                 valueMax={state.maxTitle}
                 setValueMin={(value) =>
                   dispatch({
-                    type: 'SET_SLIDER',
-                    payload: { key: 'minTitle', value },
+                    type: "SET_SLIDER",
+                    payload: { key: "minTitle", value },
                   })
                 }
                 setValueMax={(value) =>
                   dispatch({
-                    type: 'SET_SLIDER',
-                    payload: { key: 'maxTitle', value },
+                    type: "SET_SLIDER",
+                    payload: { key: "maxTitle", value },
                   })
                 }
                 suffix="words"
@@ -439,14 +445,14 @@ export default function DashboardPage() {
                 valueMax={state.maxKw}
                 setValueMin={(value) =>
                   dispatch({
-                    type: 'SET_SLIDER',
-                    payload: { key: 'minKw', value },
+                    type: "SET_SLIDER",
+                    payload: { key: "minKw", value },
                   })
                 }
                 setValueMax={(value) =>
                   dispatch({
-                    type: 'SET_SLIDER',
-                    payload: { key: 'maxKw', value },
+                    type: "SET_SLIDER",
+                    payload: { key: "maxKw", value },
                   })
                 }
               />
@@ -459,14 +465,14 @@ export default function DashboardPage() {
                 valueMax={state.maxDesc}
                 setValueMin={(value) =>
                   dispatch({
-                    type: 'SET_SLIDER',
-                    payload: { key: 'minDesc', value },
+                    type: "SET_SLIDER",
+                    payload: { key: "minDesc", value },
                   })
                 }
                 setValueMax={(value) =>
                   dispatch({
-                    type: 'SET_SLIDER',
-                    payload: { key: 'maxDesc', value },
+                    type: "SET_SLIDER",
+                    payload: { key: "maxDesc", value },
                   })
                 }
                 suffix="words"
@@ -486,7 +492,7 @@ export default function DashboardPage() {
                 ) : (
                   <CheckCircle2 className="w-4 h-4" />
                 )}
-                {state.loading ? 'Processing...' : 'Process Files'}
+                {state.loading ? "Processing..." : "Process Files"}
               </Button>
               <Button
                 onClick={downloadCsv}
@@ -511,10 +517,10 @@ export default function DashboardPage() {
                 type="file"
                 ref={inputRef}
                 multiple
-                accept={ACCEPTED.join(',')}
+                accept={ACCEPTED.join(",")}
                 onChange={(e) => {
                   handleSelected(e.target.files);
-                  e.target.value = '';
+                  e.target.value = "";
                 }}
                 className="hidden"
               />
@@ -567,23 +573,21 @@ export default function DashboardPage() {
             <CardContent className="h-auto">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold">
-                  {state.mode === 'meta'
-                    ? 'Metadata Results'
-                    : 'Prompt Results'}
+                  {state.mode === "meta"
+                    ? "Metadata Results"
+                    : "Prompt Results"}
                 </h2>
                 {state.fileResults.length > 0 && (
                   <span className="text-sm text-gray-400">
                     {state.fileResults.length} result
-                    {state.fileResults.length !== 1 ? 's' : ''}
+                    {state.fileResults.length !== 1 ? "s" : ""}
                   </span>
                 )}
               </div>
               {state.fileResults.length === 0 ? (
                 <div className="text-center py-10 text-gray-500">
                   <FileImage className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>
-                    No files processed yet. Select files and click Process.
-                  </p>
+                  <p>No files processed yet. Select files and click Process.</p>
                 </div>
               ) : (
                 <div className="space-y-4 max-h-[600px] overflow-auto pr-2">
