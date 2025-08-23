@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import sharp from "sharp";
+import { getDb } from "@/lib/mongodb-admin";
 
 export const config = { api: { bodyParser: false } };
 
-// ----------- Helper: Metadata Parser -----------
+// ----------- Helper: Metadata Parser ----------- 
 function parseMetadata(text) {
   const titleMatch = text.match(/Title:\s*(.+)/i);
   const keywordsMatch = text.match(
@@ -37,7 +38,7 @@ function parseMetadata(text) {
   };
 }
 
-// ----------- API Route -----------
+// ----------- API Route ----------- 
 export async function POST(req) {
   try {
     if (!req.headers.get("content-type")?.includes("multipart/form-data")) {
@@ -49,6 +50,7 @@ export async function POST(req) {
 
     const formData = await req.formData();
     const file = formData.get("file");
+    const uid = formData.get("uid");
 
     // Convert formData fields safely
     const mode = formData.get("mode") || "meta";
@@ -64,6 +66,10 @@ export async function POST(req) {
         { error: "No valid file uploaded" },
         { status: 400 }
       );
+    }
+
+    if (!uid) {
+      return NextResponse.json({ error: "UID is required" }, { status: 400 });
     }
 
     // ---- Convert uploaded file ----
@@ -103,19 +109,7 @@ export async function POST(req) {
         },
       },
       {
-        text: `Analyze this ${mimeType} image and generate comprehensive metadata for ${mode} mode.
-        
-Respond EXACTLY in this format:
-Title: <title>
-Keywords: <comma-separated keywords>
-Description: <description>
-Category: <comma-separated categories>
-
-Requirements:
-- Title: ${minTitle}-${maxTitle} words
-- Keywords: ${minKeywords}-${maxKeywords} items
-- Description: ${minDesc}-${maxDesc} words
-- Be accurate and descriptive`,
+        text: `Analyze this ${mimeType} image and generate comprehensive metadata for ${mode} mode.\n        \nRespond EXACTLY in this format:\nTitle: <title>\nKeywords: <comma-separated keywords>\nDescription: <description>\nCategory: <comma-separated categories>\n\nRequirements:\n- Title: ${minTitle}-${maxTitle} words\n- Keywords: ${minKeywords}-${maxKeywords} items\n- Description: ${minDesc}-${maxDesc} words\n- Be accurate and descriptive`,
       },
     ];
 
@@ -128,6 +122,25 @@ Requirements:
     const resultText = response.text || "No response text";
     const meta = parseMetadata(resultText);
 
+    // ---- Deduct Credit ----
+    const db = await getDb("nestsouq");
+    const usersCollection = db.collection("user_data");
+    const user = await usersCollection.findOne({ uid: uid });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    if (user.credits < 1) {
+      return NextResponse.json(
+        { error: "Insufficient credits" },
+        { status: 403 }
+      );
+    }
+
+    const newCredits = user.credits - 1;
+    await usersCollection.updateOne({ uid: uid }, { $set: { credits: newCredits } });
+
     return NextResponse.json({
       metadata: {
         filename: file.name || "uploaded_file",
@@ -138,6 +151,7 @@ Requirements:
         .slice(0, 3)
         .join(", ")}.`,
       rawResponse: resultText,
+      credits: newCredits,
     });
   } catch (error) {
     console.error("Error processing files:", error);
