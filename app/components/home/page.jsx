@@ -22,6 +22,9 @@ import {
   LogOut,
   Coins,
   ChevronDown,
+  Settings,
+  FileText,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -30,15 +33,50 @@ import { ResultCard } from "@/components/ui/ResultCard";
 import { ACCEPTED } from "@/lib/utils";
 import Link from "next/link";
 
+// --- Animation Variants ---
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      type: "spring",
+      stiffness: 100,
+    },
+  },
+};
+
+const cardVariants = {
+  hidden: { scale: 0.95, opacity: 0 },
+  visible: {
+    scale: 1,
+    opacity: 1,
+    transition: {
+      duration: 0.3,
+      ease: "easeOut",
+    },
+  },
+};
+
 // --- Reducer ---
 const initialState = {
   mode: "meta", // meta or prompt
   minTitle: 6,
   maxTitle: 18,
   minKw: 43,
-  maxKw: 48,
+  maxKw: 50,
   minDesc: 12,
-  maxDesc: 30,
+  maxDesc: 25,
   files: [], // array of File
   previews: [], // [{ name, url }]
   fileResults: [], // results for UI
@@ -88,18 +126,18 @@ function UserDropdown({ user, userData }) {
     <div className="relative">
       <motion.button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 rounded-full p-1 border-2 border-gray-700 hover:border-amber-400 transition-colors"
+        className="flex items-center gap-2 rounded-full bg-gray-800 hover:bg-gray-700 p-1 transition-colors"
         whileTap={{ scale: 0.95 }}
       >
-        <img
+        <Image
           src={user.photoURL}
           alt={user.displayName}
-          className="w-9 h-9 rounded-full"
+          width={36}
+          height={36}
+          className="rounded-full"
         />
         <ChevronDown
-          className={`w-5 h-5 text-gray-400 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
+          className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </motion.button>
       <AnimatePresence>
@@ -109,23 +147,35 @@ function UserDropdown({ user, userData }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 mt-2 w-64 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-10"
+            className="absolute right-0 mt-2 w-72 origin-top-right bg-gray-900/90 backdrop-blur-sm border border-gray-700 rounded-xl shadow-2xl z-10"
           >
-            <div className="p-4 border-b border-gray-700">
-              <p className="font-semibold text-white truncate">
+            <div className="p-4 text-center border-b border-gray-700/50">
+              <Image
+                src={user.photoURL}
+                alt={user.displayName}
+                width={64}
+                height={64}
+                className="rounded-full mx-auto mb-3 ring-2 ring-amber-400/50"
+              />
+              <p className="font-bold text-lg text-white truncate">
                 {user.displayName}
               </p>
-              <p className="text-xs text-gray-400 truncate">{user.email}</p>
+              <p className="text-sm text-gray-400 truncate">{user.email}</p>
             </div>
-            <div className="p-4 space-y-3">
-              <div className="flex items-center justify-between text-amber-400">
-                <div className="flex items-center gap-2">
-                  <Coins className="w-5 h-5" />
-                  <span className="font-bold text-lg">{userData.credits}</span>
+            <div className="p-4">
+              <div className="flex items-center justify-between bg-gray-800/50 rounded-lg p-3">
+                <div className="flex items-center gap-3">
+                  <Coins className="w-6 h-6 text-amber-400" />
+                  <div>
+                    <p className="text-gray-300 text-sm">Credits</p>
+                    <p className="font-bold text-white text-xl">
+                      {userData.credits}
+                    </p>
+                  </div>
                 </div>
                 <Button
                   onClick={() => router.push("/pricing")}
-                  className="text-xs bg-amber-500 hover:bg-amber-600 text-black px-3 py-1"
+                  className="bg-amber-500 hover:bg-amber-600 text-black font-bold py-2 px-4 rounded-lg text-sm"
                 >
                   Get More
                 </Button>
@@ -134,7 +184,7 @@ function UserDropdown({ user, userData }) {
             <div className="p-2">
               <button
                 onClick={googleSignOut}
-                className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-md transition-colors"
+                className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-md transition-colors"
               >
                 <LogOut className="w-5 h-5" />
                 <span>Sign Out</span>
@@ -200,7 +250,7 @@ export default function DashboardPage() {
     handleSelected(dt.files);
   };
 
-  const callGemini = async (file) => {
+  const callGemini = async (file, previewUrl) => {
     try {
       const fd = new FormData();
       fd.append("file", file, file.name);
@@ -225,6 +275,7 @@ export default function DashboardPage() {
           meta: data?.error || "API Error",
           raw: JSON.stringify(data),
           engine: "gemini",
+          previewUrl,
         };
       }
 
@@ -246,6 +297,7 @@ export default function DashboardPage() {
         prompt,
         raw,
         engine: "gemini",
+        previewUrl,
       };
     } catch (err) {
       console.error("callGemini error", err);
@@ -254,6 +306,7 @@ export default function DashboardPage() {
         meta: err.message || "Network error",
         raw: "",
         engine: "gemini",
+        previewUrl,
       };
     }
   };
@@ -284,15 +337,22 @@ export default function DashboardPage() {
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    const initialResults = state.files.map((f) => ({
-      file: f.name,
-      ok: null,
-      meta: "Processing...",
-      engine: "gemini",
-    }));
+    const initialResults = state.files.map((f) => {
+      const preview = state.previews.find((p) => p.name === f.name);
+      return {
+        file: f.name,
+        ok: null,
+        meta: "Processing...",
+        engine: "gemini",
+        previewUrl: preview?.url,
+      };
+    });
     dispatch({ type: "SET_FILE_RESULTS", payload: initialResults });
 
-    const promises = state.files.map((f) => callGemini(f));
+    const promises = state.files.map((f) => {
+      const preview = state.previews.find((p) => p.name === f.name);
+      return callGemini(f, preview?.url);
+    });
     const results = await Promise.all(promises);
 
     dispatch({ type: "SET_FILE_RESULTS", payload: results });
@@ -328,7 +388,7 @@ export default function DashboardPage() {
     ];
 
     const csv = rows
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
       .join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
@@ -361,284 +421,329 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col">
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col font-sans">
       {/* Top Bar */}
-      <header className="flex items-center justify-between px-6 py-2 border-b border-gray-800 bg-gray-900">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-gray-800 bg-gray-950/50 backdrop-blur-sm sticky top-0 z-20">
         <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3"
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
         >
-          <div>
-            <Link href="/">
-              <Image alt="Nestsouq Logo" width={90} height={90} src={logo} />
-            </Link>
-          </div>
+          <Link href="/">
+            <Image
+              alt="Netsouq Logo"
+              width={100}
+              height={40}
+              src={logo}
+              className="h-auto w-auto hover:opacity-80 transition-opacity"
+            />
+          </Link>
         </motion.div>
         {authLoading ? (
           <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
         ) : user && userData ? (
           <UserDropdown user={user} userData={userData} />
         ) : (
-          <div className="flex items-center gap-4">
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="flex items-center gap-4"
+          >
             <Button
               onClick={() => router.push("/login")}
-              className="bg-blue-500 hover:bg-blue-600"
+              className="bg-transparent border border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black transition-all duration-300"
             >
               Login
             </Button>
             <Button
-              onClick={() => router.push("/pricing")} // Assuming a pricing page exists or will be created
-              className="bg-gray-700 hover:bg-gray-600"
+              onClick={() => router.push("/pricing")}
+              className="bg-amber-500 text-black hover:bg-amber-600 transition-all duration-300"
             >
               Pricing
             </Button>
-          </div>
+          </motion.div>
         )}
       </header>
-      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 p-6">
-        {/* LEFT */}
-        <aside className="lg:col-span-3 space-y-2">
+
+      <main className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 p-8">
+        {/* LEFT - CONTROLS */}
+        <motion.aside
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="lg:col-span-3 space-y-6"
+        >
           {/* Mode Selection */}
-          <Card>
-            <CardContent>
-              <h2 className="text-lg font-semibold mb-3">Mode Selection</h2>
-              <div className="flex gap-3">
-                <Button
-                  onClick={() =>
-                    dispatch({ type: "SET_MODE", payload: "meta" })
-                  }
-                  className={`flex-1 border border-gray-700 ${
-                    state.mode === "meta"
-                      ? "bg-blue-500 text-white"
-                      : "hover:bg-gray-800"
-                  }`}
-                >
-                  Metadata
-                </Button>
-                <Button
-                  onClick={() =>
-                    dispatch({ type: "SET_MODE", payload: "prompt" })
-                  }
-                  className={`flex-1 border border-gray-700 ${
-                    state.mode === "prompt"
-                      ? "bg-amber-500 text-black"
-                      : "hover:bg-gray-800"
-                  }`}
-                >
-                  Prompt
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          {/* Sliders */}
-          <Card>
-            <CardContent className="space-y-5">
-              <div className="flex items-center justify-between mb-1">
-                <h2 className="text-lg font-semibold">Customization</h2>
-                <Button
-                  onClick={() => dispatch({ type: "RESET_SLIDERS" })}
-                  className="text-xs px-3 py-1 border border-gray-700 hover:bg-gray-800"
-                >
-                  Reset
-                </Button>
-              </div>
-              <SliderRow
-                label="Title Words"
-                hint="min & max"
-                min={1}
-                max={60}
-                valueMin={state.minTitle}
-                valueMax={state.maxTitle}
-                setValueMin={(value) =>
-                  dispatch({
-                    type: "SET_SLIDER",
-                    payload: { key: "minTitle", value },
-                  })
-                }
-                setValueMax={(value) =>
-                  dispatch({
-                    type: "SET_SLIDER",
-                    payload: { key: "maxTitle", value },
-                  })
-                }
-                suffix="words"
-              />
-              <SliderRow
-                label="Keywords Count"
-                hint="min & max"
-                min={1}
-                max={100}
-                valueMin={state.minKw}
-                valueMax={state.maxKw}
-                setValueMin={(value) =>
-                  dispatch({
-                    type: "SET_SLIDER",
-                    payload: { key: "minKw", value },
-                  })
-                }
-                setValueMax={(value) =>
-                  dispatch({
-                    type: "SET_SLIDER",
-                    payload: { key: "maxKw", value },
-                  })
-                }
-              />
-              <SliderRow
-                label="Description Words"
-                hint="min & max"
-                min={1}
-                max={100}
-                valueMin={state.minDesc}
-                valueMax={state.maxDesc}
-                setValueMin={(value) =>
-                  dispatch({
-                    type: "SET_SLIDER",
-                    payload: { key: "minDesc", value },
-                  })
-                }
-                setValueMax={(value) =>
-                  dispatch({
-                    type: "SET_SLIDER",
-                    payload: { key: "maxDesc", value },
-                  })
-                }
-                suffix="words"
-              />
-            </CardContent>
-          </Card>
-          {/* Actions */}
-          <Card>
-            <CardContent className="flex flex-col gap-3">
-              <Button
-                onClick={processFiles}
-                disabled={state.loading || state.files.length === 0}
-                className="bg-amber-500 hover:bg-amber-600 flex items-center justify-center gap-2"
-              >
-                {state.loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="w-4 h-4" />
-                )}
-                {state.loading ? "Processing..." : "Process Files"}
-              </Button>
-              <Button
-                onClick={downloadCsv}
-                disabled={state.fileResults.length === 0}
-                className="bg-green-500 hover:bg-green-600 flex items-center justify-center gap-2"
-              >
-                <Download className="w-4 h-4" /> Download CSV
-              </Button>
-              {state.errorMsg && (
-                <p className="text-red-500 text-sm mt-2">{state.errorMsg}</p>
-              )}
-            </CardContent>
-          </Card>
-        </aside>
-        {/* RIGHT */}
-        <section className="lg:col-span-9 space-y-6">
-          {/* File Selection */}
-          <Card>
-            <CardContent>
-              <h2 className="text-lg font-semibold mb-2">Selected Files</h2>
-              <input
-                type="file"
-                ref={inputRef}
-                multiple
-                accept={ACCEPTED.join(",")}
-                onChange={(e) => {
-                  handleSelected(e.target.files);
-                  e.target.value = "";
-                }}
-                className="hidden"
-              />
-              <Button
-                onClick={() => inputRef.current?.click()}
-                className="bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2 mb-3"
-              >
-                <Upload className="w-4 h-4" /> Select Files
-              </Button>
-              <div
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={onDrop}
-                className="min-h-[120px] border-2 border-dashed border-gray-700 rounded-xl p-4 flex flex-wrap gap-3 items-center justify-start"
-              >
-                {state.previews.length === 0 && (
-                  <p className="text-xs text-gray-500">
-                    Drag & drop or select files
-                  </p>
-                )}
-                {state.previews.map((p, idx) => (
-                  <div
-                    key={idx}
-                    className="w-20 h-20 relative border border-gray-700 rounded-lg overflow-hidden group"
-                  >
-                    {p.url ? (
-                      <img
-                        src={p.url}
-                        alt={p.name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <FileImage className="w-full h-full text-gray-500 p-3" />
-                    )}
-                    <button
-                      onClick={() => removeFile(idx)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                    <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-xs p-1 truncate">
-                      {p.name}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-          {/* Results */}
-          <Card>
-            <CardContent className="h-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold">
-                  {state.mode === "meta"
-                    ? "Metadata Results"
-                    : "Prompt Results"}
+          <motion.div variants={itemVariants}>
+            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
+              <CardContent>
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-amber-400" /> Mode Selection
                 </h2>
-                {state.fileResults.length > 0 && (
-                  <span className="text-sm text-gray-400">
-                    {state.fileResults.length} result
-                    {state.fileResults.length !== 1 ? "s" : ""}
-                  </span>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => dispatch({ type: "SET_MODE", payload: "meta" })}
+                    className={`flex-1 border-2 transition-all duration-300 ${state.mode === "meta" ? "bg-blue-500 border-blue-400 text-white shadow-md" : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"}`}
+                  >
+                    Metadata
+                  </Button>
+                  <Button
+                    onClick={() => dispatch({ type: "SET_MODE", payload: "prompt" })}
+                    className={`flex-1 border-2 transition-all duration-300 ${state.mode === "prompt" ? "bg-amber-500 border-amber-400 text-black shadow-md" : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"}`}
+                  >
+                    Prompt
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Sliders */}
+          <motion.div variants={itemVariants}>
+            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
+              <CardContent className="space-y-5 pt-6">
+                <div className="flex items-center justify-between mb-2">
+                  <h2 className="text-lg font-semibold flex items-center gap-2">
+                    <Settings className="w-5 h-5 text-amber-400" /> Customization
+                  </h2>
+                  <Button
+                    onClick={() => dispatch({ type: "RESET_SLIDERS" })}
+                    className="text-xs px-3 py-1 border border-gray-700 hover:bg-gray-600 transition-colors"
+                  >
+                    Reset
+                  </Button>
+                </div>
+                <SliderRow
+                  label="Title Words"
+                  hint="min & max"
+                  min={1}
+                  max={18}
+                  valueMin={state.minTitle}
+                  valueMax={state.maxTitle}
+                  setValueMin={(value) =>
+                    dispatch({ type: "SET_SLIDER", payload: { key: "minTitle", value } })
+                  }
+                  setValueMax={(value) =>
+                    dispatch({ type: "SET_SLIDER", payload: { key: "maxTitle", value } })
+                  }
+                  suffix="words"
+                />
+                <SliderRow
+                  label="Keywords Count"
+                  hint="min & max"
+                  min={1}
+                  max={50}
+                  valueMin={state.minKw}
+                  valueMax={state.maxKw}
+                  setValueMin={(value) =>
+                    dispatch({ type: "SET_SLIDER", payload: { key: "minKw", value } })
+                  }
+                  setValueMax={(value) =>
+                    dispatch({ type: "SET_SLIDER", payload: { key: "maxKw", value } })
+                  }
+                />
+                <SliderRow
+                  label="Description Words"
+                  hint="min & max"
+                  min={1}
+                  max={25}
+                  valueMin={state.minDesc}
+                  valueMax={state.maxDesc}
+                  setValueMin={(value) =>
+                    dispatch({ type: "SET_SLIDER", payload: { key: "minDesc", value } })
+                  }
+                  setValueMax={(value) =>
+                    dispatch({ type: "SET_SLIDER", payload: { key: "maxDesc", value } })
+                  }
+                  suffix="words"
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Actions */}
+          <motion.div variants={itemVariants}>
+            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
+              <CardContent className="flex flex-col gap-3 pt-6">
+                <Button
+                  onClick={processFiles}
+                  disabled={state.loading || state.files.length === 0}
+                  className="bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold flex items-center justify-center gap-2 transition-all duration-300 hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                >
+                  {state.loading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-5 h-5" />
+                  )}
+                  {state.loading ? "Processing..." : "Process Files"}
+                </Button>
+                <Button
+                  onClick={downloadCsv}
+                  disabled={state.fileResults.length === 0}
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold flex items-center justify-center gap-2 transition-all duration-300 hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                >
+                  <Download className="w-5 h-5" /> Download CSV
+                </Button>
+                <AnimatePresence>
+                  {state.errorMsg && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="text-red-400 text-sm text-center bg-red-900/20 p-2 rounded-lg"
+                    >
+                      {state.errorMsg}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </motion.aside>
+
+        {/* RIGHT - UPLOAD & RESULTS */}
+        <motion.section
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="lg:col-span-9 space-y-6"
+        >
+          {/* File Selection */}
+          <motion.div variants={cardVariants}>
+            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
+              <CardContent className="pt-6">
+                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                  <Upload className="w-6 h-6 text-amber-400" /> Upload Your Files
+                </h2>
+                <input
+                  type="file"
+                  ref={inputRef}
+                  multiple
+                  accept={ACCEPTED.join(",")}
+                  onChange={(e) => {
+                    handleSelected(e.target.files);
+                    e.target.value = "";
+                  }}
+                  className="hidden"
+                />
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.add("border-amber-500", "bg-gray-800");
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.currentTarget.classList.remove("border-amber-500", "bg-gray-800");
+                  }}
+                  onDrop={(e) => {
+                    onDrop(e);
+                    e.currentTarget.classList.remove("border-amber-500", "bg-gray-800");
+                  }}
+                  onClick={() => inputRef.current?.click()}
+                  className="min-h-[150px] border-2 border-dashed border-gray-700 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 hover:border-amber-400 hover:bg-gray-800/50"
+                >
+                  <Upload className="w-10 h-10 text-gray-500 mb-3 transition-transform duration-300 group-hover:scale-110" />
+                  <p className="text-lg font-semibold text-gray-300">
+                    Drag & drop files here
+                  </p>
+                  <p className="text-gray-500">or click to select</p>
+                </div>
+                <AnimatePresence>
+                  {state.previews.length > 0 && (
+                    <motion.div
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
+                      className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
+                    >
+                      {state.previews.map((p, idx) => (
+                        <motion.div
+                          key={p.name + idx}
+                          variants={itemVariants}
+                          className="relative group aspect-square border border-gray-700 rounded-lg overflow-hidden shadow-md"
+                        >
+                          {p.url ? (
+                            <Image
+                              src={p.url}
+                              alt={p.name}
+                              layout="fill"
+                              objectFit="cover"
+                              className="group-hover:scale-110 transition-transform duration-300"
+                            />
+                          ) : (
+                            <FileImage className="w-full h-full text-gray-600 p-4" />
+                          )}
+                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                removeFile(idx);
+                              }}
+                              className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1.5 z-10 transform transition-transform hover:scale-110"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-xs p-1.5 truncate text-center">
+                            {p.name}
+                          </div>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Results */}
+          <motion.div variants={cardVariants}>
+            <Card className="bg-gray-900/50 border-gray-800 shadow-lg min-h-[400px]">
+              <CardContent className="pt-6 h-full">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-2xl font-bold flex items-center gap-2">
+                    <FileText className="w-6 h-6 text-amber-400" />
+                    {state.mode === "meta" ? "Metadata Results" : "Prompt Results"}
+                  </h2>
+                  {state.fileResults.length > 0 && (
+                    <span className="text-sm bg-gray-800 px-3 py-1 rounded-full">
+                      {state.fileResults.length} result{state.fileResults.length !== 1 ? "s" : ""}
+                    </span>
+                  )}
+                </div>
+                {state.fileResults.length === 0 ? (
+                  <div className="text-center py-16 text-gray-500 flex flex-col items-center justify-center h-full">
+                    <FileImage className="w-20 h-20 mx-auto mb-6 opacity-30" />
+                    <p className="text-lg font-semibold">No files processed yet</p>
+                    <p className="text-sm">Upload files and click Process to see results here.</p>
+                  </div>
+                ) : (
+                  <motion.div
+                    variants={containerVariants}
+                    initial="hidden"
+                    animate="visible"
+                    className="space-y-4 max-h-[600px] overflow-y-auto pr-2 -mr-2"
+                  >
+                    {state.fileResults.map((f, idx) => {
+                      return (
+                        <motion.div key={f.file + idx} variants={itemVariants}>
+                          <ResultCard
+                            mode={state.mode}
+                            fileData={f}
+                            preview={{ url: f.previewUrl }}
+                            index={idx}
+                            onRemove={removeResult}
+                          />
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
                 )}
-              </div>
-              {state.fileResults.length === 0 ? (
-                <div className="text-center py-10 text-gray-500">
-                  <FileImage className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                  <p>No files processed yet. Select files and click Process.</p>
-                </div>
-              ) : (
-                <div className="space-y-4 max-h-[600px] overflow-auto pr-2">
-                  {state.fileResults.map((f, idx) => {
-                    const resultPreview = state.previews.find(
-                      (p) => p.name === f.file
-                    );
-                    return (
-                      <ResultCard
-                        key={idx}
-                        mode={state.mode}
-                        fileData={f}
-                        preview={resultPreview}
-                        index={idx}
-                        onRemove={removeResult}
-                      />
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </section>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </motion.section>
       </main>
     </div>
   );

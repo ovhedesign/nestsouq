@@ -14,17 +14,25 @@ export function SliderRow({
   setValueMax,
   suffix = '',
 }) {
-  // Ensure min <= max
-  const clampPair = (lo, hi) => {
-    let a = Math.min(lo, hi);
-    let b = Math.max(lo, hi);
-    return [a, b];
+  const onChangeMin = (e) => {
+    const newMin = Number(e.target.value);
+    if (newMin > valueMax) {
+      setValueMin(newMin);
+      setValueMax(newMin);
+    } else {
+      setValueMin(newMin);
+    }
   };
 
-  const onChangeMin = (e) =>
-    setValueMin(clampPair(Number(e.target.value), valueMax)[0]);
-  const onChangeMax = (e) =>
-    setValueMax(clampPair(valueMin, Number(e.target.value))[1]);
+  const onChangeMax = (e) => {
+    const newMax = Number(e.target.value);
+    if (newMax < valueMin) {
+      setValueMin(newMax);
+      setValueMax(newMax);
+    } else {
+      setValueMax(newMax);
+    }
+  };
 
   return (
     <div className="space-y-2">

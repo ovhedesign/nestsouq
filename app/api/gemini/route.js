@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import sharp from "sharp";
 import { getDb } from "@/lib/mongodb-admin";
-
-export const dynamic = 'force-dynamic';
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 // ----------- Helper: Metadata Parser -----------
 function parseMetadata(text) {
@@ -79,8 +79,6 @@ export async function POST(req) {
 
     // EPS or PostScript or SVG → convert to PNG
     if (
-      mimeType === "application/postscript" ||
-      file.name?.toLowerCase().endsWith(".eps") ||
       mimeType === "image/svg+xml" ||
       file.name?.toLowerCase().endsWith(".svg")
     ) {
@@ -90,7 +88,10 @@ export async function POST(req) {
       } catch (err) {
         const errorType = mimeType.includes("svg") ? "SVG" : "EPS";
         return NextResponse.json(
-          { error: `Failed to convert ${errorType} to PNG`, details: err.message },
+          {
+            error: `Failed to convert ${errorType} to PNG`,
+            details: err.message,
+          },
           { status: 500 }
         );
       }
@@ -139,7 +140,10 @@ export async function POST(req) {
     }
 
     const newCredits = user.credits - 1;
-    await usersCollection.updateOne({ uid: uid }, { $set: { credits: newCredits } });
+    await usersCollection.updateOne(
+      { uid: uid },
+      { $set: { credits: newCredits } }
+    );
 
     return NextResponse.json({
       metadata: {
