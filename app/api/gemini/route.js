@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
-import sharp from "sharp";
+// import sharp from "sharp"; // Removed
 import { getDb } from "@/lib/mongodb-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// ----------- Helper: Metadata Parser -----------
+// ----------- Helper: Metadata Parser ----------- 
 function parseMetadata(text) {
   const titleMatch = text.match(/Title:\s*(.+)/i);
   const keywordsMatch = text.match(
@@ -38,7 +38,7 @@ function parseMetadata(text) {
   };
 }
 
-// ----------- API Route -----------
+// ----------- API Route ----------- 
 export async function POST(req) {
   try {
     if (!req.headers.get("content-type")?.includes("multipart/form-data")) {
@@ -77,24 +77,17 @@ export async function POST(req) {
     let buffer = Buffer.from(arrayBuffer);
     let mimeType = file.type || "image/jpeg";
 
-    // EPS or PostScript or SVG → convert to PNG
+    // Explicitly disallow SVG/EPS if sharp is removed
     if (
       mimeType === "image/svg+xml" ||
-      file.name?.toLowerCase().endsWith(".svg")
+      file.name?.toLowerCase().endsWith(".svg") ||
+      mimeType === "application/postscript" || // Assuming this is for EPS
+      file.name?.toLowerCase().endsWith(".eps")
     ) {
-      try {
-        buffer = await sharp(buffer).png().toBuffer();
-        mimeType = "image/png";
-      } catch (err) {
-        const errorType = mimeType.includes("svg") ? "SVG" : "EPS";
-        return NextResponse.json(
-          {
-            error: `Failed to convert ${errorType} to PNG`,
-            details: err.message,
-          },
-          { status: 500 }
-        );
-      }
+      return NextResponse.json(
+        { error: "SVG/EPS image processing is not supported." },
+        { status: 400 }
+      );
     }
 
     const base64Image = buffer.toString("base64");
@@ -165,3 +158,4 @@ export async function POST(req) {
     );
   }
 }
+

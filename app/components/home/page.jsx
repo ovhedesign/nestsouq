@@ -7,7 +7,7 @@ import React, {
   useCallback,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "./logo.svg";
+import logo from "./logo.png"; // Removed as it's now a static asset in public
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/hooks";
@@ -137,7 +137,9 @@ function UserDropdown({ user, userData }) {
           className="rounded-full"
         />
         <ChevronDown
-          className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+          className={`w-5 h-5 text-gray-400 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
         />
       </motion.button>
       <AnimatePresence>
@@ -184,9 +186,12 @@ function UserDropdown({ user, userData }) {
                 {userData.isPremium && (
                   <div className="bg-gray-800/50 rounded-lg p-3">
                     <p className="text-gray-300 text-sm">Current Plan:</p>
-                    <p className="font-bold text-white text-lg">{userData.paymentInfo?.planId || 'N/A'}</p>
+                    <p className="font-bold text-white text-lg">
+                      {userData.paymentInfo?.planId || "N/A"}
+                    </p>
                     <p className="text-gray-400 text-xs mt-1">
-                      Expires: {new Date(userData.expireDate).toLocaleDateString()}
+                      Expires:{" "}
+                      {new Date(userData.expireDate).toLocaleDateString()}
                     </p>
                   </div>
                 )}
@@ -399,7 +404,7 @@ export default function DashboardPage() {
     ];
 
     const csv = rows
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(','))
+      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
       .join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
@@ -494,14 +499,26 @@ export default function DashboardPage() {
                 </h2>
                 <div className="flex gap-2">
                   <Button
-                    onClick={() => dispatch({ type: "SET_MODE", payload: "meta" })}
-                    className={`flex-1 border-2 transition-all duration-300 ${state.mode === "meta" ? "bg-blue-500 border-blue-400 text-white shadow-md" : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"}`}
+                    onClick={() =>
+                      dispatch({ type: "SET_MODE", payload: "meta" })
+                    }
+                    className={`flex-1 border-2 transition-all duration-300 ${
+                      state.mode === "meta"
+                        ? "bg-blue-500 border-blue-400 text-white shadow-md"
+                        : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
+                    }`}
                   >
                     Metadata
                   </Button>
                   <Button
-                    onClick={() => dispatch({ type: "SET_MODE", payload: "prompt" })}
-                    className={`flex-1 border-2 transition-all duration-300 ${state.mode === "prompt" ? "bg-amber-500 border-amber-400 text-black shadow-md" : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"}`}
+                    onClick={() =>
+                      dispatch({ type: "SET_MODE", payload: "prompt" })
+                    }
+                    className={`flex-1 border-2 transition-all duration-300 ${
+                      state.mode === "prompt"
+                        ? "bg-amber-500 border-amber-400 text-black shadow-md"
+                        : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
+                    }`}
                   >
                     Prompt
                   </Button>
@@ -516,7 +533,8 @@ export default function DashboardPage() {
               <CardContent className="space-y-5 pt-6">
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <Settings className="w-5 h-5 text-amber-400" /> Customization
+                    <Settings className="w-5 h-5 text-amber-400" />{" "}
+                    Customization
                   </h2>
                   <Button
                     onClick={() => dispatch({ type: "RESET_SLIDERS" })}
@@ -533,10 +551,16 @@ export default function DashboardPage() {
                   valueMin={state.minTitle}
                   valueMax={state.maxTitle}
                   setValueMin={(value) =>
-                    dispatch({ type: "SET_SLIDER", payload: { key: "minTitle", value } })
+                    dispatch({
+                      type: "SET_SLIDER",
+                      payload: { key: "minTitle", value },
+                    })
                   }
                   setValueMax={(value) =>
-                    dispatch({ type: "SET_SLIDER", payload: { key: "maxTitle", value } })
+                    dispatch({
+                      type: "SET_SLIDER",
+                      payload: { key: "maxTitle", value },
+                    })
                   }
                   suffix="words"
                 />
@@ -548,10 +572,16 @@ export default function DashboardPage() {
                   valueMin={state.minKw}
                   valueMax={state.maxKw}
                   setValueMin={(value) =>
-                    dispatch({ type: "SET_SLIDER", payload: { key: "minKw", value } })
+                    dispatch({
+                      type: "SET_SLIDER",
+                      payload: { key: "minKw", value },
+                    })
                   }
                   setValueMax={(value) =>
-                    dispatch({ type: "SET_SLIDER", payload: { key: "maxKw", value } })
+                    dispatch({
+                      type: "SET_SLIDER",
+                      payload: { key: "maxKw", value },
+                    })
                   }
                 />
                 <SliderRow
@@ -562,10 +592,16 @@ export default function DashboardPage() {
                   valueMin={state.minDesc}
                   valueMax={state.maxDesc}
                   setValueMin={(value) =>
-                    dispatch({ type: "SET_SLIDER", payload: { key: "minDesc", value } })
+                    dispatch({
+                      type: "SET_SLIDER",
+                      payload: { key: "minDesc", value },
+                    })
                   }
                   setValueMax={(value) =>
-                    dispatch({ type: "SET_SLIDER", payload: { key: "maxDesc", value } })
+                    dispatch({
+                      type: "SET_SLIDER",
+                      payload: { key: "maxDesc", value },
+                    })
                   }
                   suffix="words"
                 />
@@ -625,7 +661,8 @@ export default function DashboardPage() {
             <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
               <CardContent className="pt-6">
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Upload className="w-6 h-6 text-amber-400" /> Upload Your Files
+                  <Upload className="w-6 h-6 text-amber-400" /> Upload Your
+                  Files
                 </h2>
                 <input
                   type="file"
@@ -641,15 +678,24 @@ export default function DashboardPage() {
                 <div
                   onDragOver={(e) => {
                     e.preventDefault();
-                    e.currentTarget.classList.add("border-amber-500", "bg-gray-800");
+                    e.currentTarget.classList.add(
+                      "border-amber-500",
+                      "bg-gray-800"
+                    );
                   }}
                   onDragLeave={(e) => {
                     e.preventDefault();
-                    e.currentTarget.classList.remove("border-amber-500", "bg-gray-800");
+                    e.currentTarget.classList.remove(
+                      "border-amber-500",
+                      "bg-gray-800"
+                    );
                   }}
                   onDrop={(e) => {
                     onDrop(e);
-                    e.currentTarget.classList.remove("border-amber-500", "bg-gray-800");
+                    e.currentTarget.classList.remove(
+                      "border-amber-500",
+                      "bg-gray-800"
+                    );
                   }}
                   onClick={() => inputRef.current?.click()}
                   className="min-h-[150px] border-2 border-dashed border-gray-700 rounded-xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 hover:border-amber-400 hover:bg-gray-800/50"
@@ -715,19 +761,26 @@ export default function DashboardPage() {
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold flex items-center gap-2">
                     <FileText className="w-6 h-6 text-amber-400" />
-                    {state.mode === "meta" ? "Metadata Results" : "Prompt Results"}
+                    {state.mode === "meta"
+                      ? "Metadata Results"
+                      : "Prompt Results"}
                   </h2>
                   {state.fileResults.length > 0 && (
                     <span className="text-sm bg-gray-800 px-3 py-1 rounded-full">
-                      {state.fileResults.length} result{state.fileResults.length !== 1 ? "s" : ""}
+                      {state.fileResults.length} result
+                      {state.fileResults.length !== 1 ? "s" : ""}
                     </span>
                   )}
                 </div>
                 {state.fileResults.length === 0 ? (
                   <div className="text-center py-16 text-gray-500 flex flex-col items-center justify-center h-full">
                     <FileImage className="w-20 h-20 mx-auto mb-6 opacity-30" />
-                    <p className="text-lg font-semibold">No files processed yet</p>
-                    <p className="text-sm">Upload files and click Process to see results here.</p>
+                    <p className="text-lg font-semibold">
+                      No files processed yet
+                    </p>
+                    <p className="text-sm">
+                      Upload files and click Process to see results here.
+                    </p>
                   </div>
                 ) : (
                   <motion.div
