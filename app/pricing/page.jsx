@@ -1,8 +1,9 @@
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
-
 import Link from "next/link";
+import { useAuth } from "@/lib/hooks"; // Import useAuth
+
 // Pricing data array (same as before)
 const pricingPlans = [
   {
@@ -65,7 +66,7 @@ const pricingPlans = [
 ];
 
 // Pricing card
-const PricingCard = ({ plan }) => {
+const PricingCard = ({ plan, currentUserPlanId }) => {
   const {
     planId,
     title,
@@ -78,15 +79,27 @@ const PricingCard = ({ plan }) => {
     isPopular,
   } = plan;
 
+  const isCurrentPlan = currentUserPlanId === planId;
+  const isFreeTrial = planId === "Free Trial";
+
   return (
     <motion.div
-      className={`relative w-full max-w-sm rounded-xl border border-gray-700 bg-gray-950 p-8 shadow-md transition-all duration-300 hover:scale-105 hover:shadow-lg`}
-      whileHover={{ y: -5 }}
+      className={`relative flex flex-col w-full max-w-sm rounded-xl border p-8 shadow-md transition-all duration-300
+        ${isCurrentPlan ? "border-blue-500 bg-blue-950/50" : "border-gray-700 bg-gray-950"}
+        ${isFreeTrial ? "opacity-70 cursor-not-allowed" : "hover:scale-105 hover:shadow-lg"}`}
+      whileHover={isFreeTrial ? {} : { y: -5 }}
     >
       {/* Popular badge */}
-      {isPopular && (
+      {isPopular && !isCurrentPlan && (
         <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gray-200 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-gray-900 shadow">
           Popular
+        </div>
+      )}
+
+      {/* Current Plan badge */}
+      {isCurrentPlan && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-blue-500 px-4 py-1 text-xs font-semibold uppercase tracking-wide text-white shadow">
+          Current Plan
         </div>
       )}
 
@@ -103,12 +116,12 @@ const PricingCard = ({ plan }) => {
       <span className="block mt-1 text-center text-sm text-gray-400">
         {period}
       </span>
-      <p className="mt-2 mb-6 text-center text-gray-300">{description}</p>
+      <p className="mt-2 mb-6 text-center text-gray-300 flex-grow">{description}</p> {/* flex-grow for consistent height */}
 
       <div className="border-t border-gray-700"></div>
 
       {/* Features */}
-      <ul className="mt-6 mb-6 space-y-3">
+      <ul className="mt-6 mb-6 space-y-3 flex-grow"> {/* flex-grow for consistent height */}
         {features.map((feature, index) => (
           <li key={index} className="flex items-center">
             <svg
@@ -128,20 +141,32 @@ const PricingCard = ({ plan }) => {
       </ul>
 
       {/* Button */}
-      <Link
-        href={`/pricing/${planId}`}
-        className={`w-full text-center rounded-md border border-gray-600 bg-gray-800 py-3 text-sm font-medium text-gray-100 transition-all duration-300 hover:bg-gray-700 ${
-          isPopular ? "border-yellow-400 text-yellow-400 hover:bg-gray-900" : ""
-        }`}
-      >
-        {buttonText}
-      </Link>
+      {isFreeTrial ? (
+        <button
+          disabled
+          className={`w-full text-center rounded-md border border-gray-600 bg-gray-800 py-3 text-sm font-medium text-gray-500 cursor-not-allowed`}
+        >
+          {buttonText}
+        </button>
+      ) : (
+        <Link
+          href={`/pricing/${planId}`}
+          className={`w-full text-center rounded-md border py-3 text-sm font-medium transition-all duration-300
+            ${isPopular ? "border-yellow-400 text-yellow-400 hover:bg-gray-900" : "border-gray-600 bg-gray-800 text-gray-100 hover:bg-gray-700"}
+            ${isCurrentPlan ? "bg-blue-600 border-blue-600 text-white hover:bg-blue-700" : ""}`}
+        >
+          {isCurrentPlan ? "Your Current Plan" : buttonText}
+        </Link>
+      )}
     </motion.div>
   );
 };
 
 // Main component
 export default function PricingPage() {
+  const { userData } = useAuth(); // Get userData from useAuth
+  const currentUserPlanId = userData?.paymentInfo?.planId; // Get current user's planId
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-900 p-6 font-sans antialiased">
       <div className="container max-w-6xl">
@@ -159,9 +184,9 @@ export default function PricingPage() {
           </p>
         </motion.div>
 
-        <div className="flex flex-col items-center justify-center gap-8 lg:flex-row lg:items-start lg:gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 items-stretch"> {/* Use grid and items-stretch for consistent height */}
           {pricingPlans.map((plan, index) => (
-            <PricingCard key={index} plan={plan} />
+            <PricingCard key={index} plan={plan} currentUserPlanId={currentUserPlanId} />
           ))}
         </div>
       </div>

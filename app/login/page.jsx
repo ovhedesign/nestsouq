@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation"; // Added useSearchParams
 import { motion } from "framer-motion";
 import { googleSignIn, auth } from "@/lib/auth";
 import { onAuthStateChanged, getRedirectResult } from "firebase/auth";
@@ -10,6 +10,7 @@ import { FcGoogle } from "react-icons/fc";
 export default function LoginPage() {
   const [user, setUser] = useState(null);
   const router = useRouter();
+  const searchParams = typeof window !== 'undefined' ? useSearchParams() : null; // Access useSearchParams only on client-side
 
 const handleSignIn = async () => {
   try {
@@ -27,7 +28,8 @@ const handleSignIn = async () => {
       }),
     });
 
-    router.push("/");
+    const redirectUrl = searchParams ? searchParams.get("redirect") : null;
+    router.push(redirectUrl || "/");
   } catch (error) {
     console.error("Sign-in failed", error);
   }
@@ -54,7 +56,8 @@ const handleSignIn = async () => {
               photoURL: currentUser.photoURL,
             }),
           });
-          router.push("/"); // Redirect after sign-in
+          const redirectUrl = searchParams ? searchParams.get("redirect") : null;
+          router.push(redirectUrl || "/"); // Redirect after sign-in
         }
       } catch (error) {
         console.error("Error during redirect result:", error);
@@ -71,7 +74,7 @@ const handleSignIn = async () => {
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [router, searchParams]);
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-950 p-4">

@@ -10,26 +10,31 @@ const PlanPage = () => {
   const [loading, setLoading] = useState(true);
   const { planId } = useParams();
   const router = useRouter();
-  const { user } = useAuth(); // Get user from your auth hook
+  const { user, loading: authLoading } = useAuth();
 
+  // Handle authentication loading and redirection
   useEffect(() => {
+    if (!authLoading && !user) {
+      router.push(`/login?redirect=${encodeURIComponent(window.location.pathname)}`);
+    }
+  }, [user, authLoading, router]);
+
+  // Fetch plan details
+  useEffect(() => {
+    if (authLoading || !user) {
+      // Don't fetch plans if auth is still loading or user is not logged in
+      return;
+    }
+
     const fetchPlans = async () => {
       try {
         const res = await fetch("/api/plans");
         const data = await res.json();
         if (data.success) {
           setAllPlans(data.data);
-          console.log("API Response Data:", data);
-          console.log("planId from useParams (before find):", planId);
-          console.log("Plans data (before find):");
-          data.data.forEach((p) =>
-            console.log(`  Plan ID: ${p.planId}, _id: ${p._id}`)
-          );
-
           const selected = data.data.find(
             (p) => p.planId.toLowerCase() === planId.toLowerCase()
           );
-          console.log("Selected Plan (after find):", selected);
           setPlan(selected);
         }
       } catch (error) {
@@ -39,7 +44,7 @@ const PlanPage = () => {
     };
 
     fetchPlans();
-  }, [planId]);
+  }, [planId, user, authLoading]);
 
   const createOrder = async () => {
     const res = await fetch("/api/paypal/create-order", {
@@ -50,7 +55,7 @@ const PlanPage = () => {
     const data = await res.json();
 
     // Return PayPal order ID
-    return data.id;
+    return data.orderID;
   };
 
   const onApprove = async (data) => {
@@ -62,8 +67,10 @@ const PlanPage = () => {
         },
         body: JSON.stringify({
           orderID: data.orderID,
-          userId: user.id, // Assuming user.id is available from useAuth()
-          planId: plan._id, // Assuming plan._id is available from fetched plan
+          uid: user.id, // Assuming user.id is available from useAuth()
+          planId: plan.planId, // Sending the string planId
+          planPrice: plan.price, // Sending the plan price
+          planDurationDays: plan.durationDays, // Sending the plan duration
         }),
       });
 
@@ -79,8 +86,35 @@ const PlanPage = () => {
     }
   };
 
+  // Display loading state for authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+        <div className="text-xl">Loading authentication...</div>
+      </div>
+    );
+  }
+
+  // If user is not logged in after auth has loaded, redirect (this return null is important)
+  if (!user) {
+    return null; // The useEffect above will handle the push
+  }
+
+  // Display loading state for plan details
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+        <div className="text-xl">Loading plan details...</div>
+      </div>
+    );
+  }
+
   if (!plan) {
-    return <div>Plan not found</div>;
+    return (
+      <div className="min-h-screen bg-gray-950 text-white flex items-center justify-center">
+        <div className="text-xl">Plan not found</div>
+      </div>
+    );
   }
 
   return (

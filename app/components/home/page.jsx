@@ -163,22 +163,33 @@ function UserDropdown({ user, userData }) {
               <p className="text-sm text-gray-400 truncate">{user.email}</p>
             </div>
             <div className="p-4">
-              <div className="flex items-center justify-between bg-gray-800/50 rounded-lg p-3">
-                <div className="flex items-center gap-3">
-                  <Coins className="w-6 h-6 text-amber-400" />
-                  <div>
-                    <p className="text-gray-300 text-sm">Credits</p>
-                    <p className="font-bold text-white text-xl">
-                      {userData.credits}
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center justify-between bg-gray-800/50 rounded-lg p-3">
+                  <div className="flex items-center gap-3">
+                    <Coins className="w-6 h-6 text-amber-400" />
+                    <div>
+                      <p className="text-gray-300 text-sm">Credits</p>
+                      <p className="font-bold text-white text-xl">
+                        {userData.credits}
+                      </p>
+                    </div>
+                  </div>
+                  <Button
+                    onClick={() => router.push("/pricing")}
+                    className="bg-amber-500 hover:bg-amber-600 text-black font-bold py-2 px-4 rounded-lg text-sm"
+                  >
+                    Get More
+                  </Button>
+                </div>
+                {userData.isPremium && (
+                  <div className="bg-gray-800/50 rounded-lg p-3">
+                    <p className="text-gray-300 text-sm">Current Plan:</p>
+                    <p className="font-bold text-white text-lg">{userData.paymentInfo?.planId || 'N/A'}</p>
+                    <p className="text-gray-400 text-xs mt-1">
+                      Expires: {new Date(userData.expireDate).toLocaleDateString()}
                     </p>
                   </div>
-                </div>
-                <Button
-                  onClick={() => router.push("/pricing")}
-                  className="bg-amber-500 hover:bg-amber-600 text-black font-bold py-2 px-4 rounded-lg text-sm"
-                >
-                  Get More
-                </Button>
+                )}
               </div>
             </div>
             <div className="p-2">
