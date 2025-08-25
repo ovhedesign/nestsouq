@@ -16,7 +16,7 @@
     "orClickToSelect": "or click to select",
     "metadataResults": "Metadata Results",
     "promptResults": "Prompt Results",
-    "result": "{count, plural, one {result} other {results}}",
+    "result": "result",
     "noFilesProcessed": "No files processed yet",
     "uploadFilesPrompt": "Upload files and click Process to see results here.",
     "selectedImages": "Selected Images",
@@ -30,6 +30,11 @@
     "signOut": "Sign Out",
     "notEnoughCredits": "Not enough credits. Please upgrade your plan.",
     "noFilesToProcess": "No files to process",
-    "unsupportedFileType": "Rejected {count} file(s) — unsupported type."
+    "unsupportedFileType": "Rejected {count} file(s) — unsupported type.",
+    "language": "Language"
+  },
+  "LanguageSwitcher": {
+    "english": "English",
+    "arabic": "Arabic"
   }
 }

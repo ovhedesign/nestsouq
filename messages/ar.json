@@ -16,7 +16,7 @@
     "orClickToSelect": "أو انقر للتحديد",
     "metadataResults": "نتائج البيانات الوصفية",
     "promptResults": "نتائج المطالبة",
-    "result": "{count, plural, one {نتيجة} other {نتائج}}",
+    "result": "نَتَائِج",
     "noFilesProcessed": "لم تتم معالجة أي ملفات بعد",
     "uploadFilesPrompt": "قم بتحميل الملفات وانقر على معالجة لرؤية النتائج هنا.",
     "selectedImages": "الصور المختارة",
@@ -30,6 +30,11 @@
     "signOut": "تسجيل الخروج",
     "notEnoughCredits": "لا توجد أرصدة كافية. يرجى ترقية خطتك.",
     "noFilesToProcess": "لا توجد ملفات للمعالجة",
-    "unsupportedFileType": "تم رفض {count} ملف (ملفات) - نوع غير مدعوم."
+    "unsupportedFileType": "تم رفض {count} ملف (ملفات) - نوع غير مدعوم.",
+    "language": "اللغة"
+  },
+  "LanguageSwitcher": {
+    "english": "English",
+    "arabic": "العربية"
   }
 }

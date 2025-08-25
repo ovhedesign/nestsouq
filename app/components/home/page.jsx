@@ -28,6 +28,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
+import LanguageSwitcher from "../ui/LanguageSwitcher";
 import { Card, CardContent } from "@/components/ui/Card";
 import { SliderRow } from "@/components/ui/Slider";
 import { ResultCard } from "@/components/ui/ResultCard";
@@ -447,6 +448,7 @@ export default function DashboardPage() {
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5, ease: "easeOut" }}
+          className="flex items-center gap-4" // Added flex container for logo and language switcher
         >
           <Link href="/">
             <Image
@@ -493,6 +495,18 @@ export default function DashboardPage() {
           animate="visible"
           className="lg:col-span-3 space-y-6"
         >
+          {/* Language Selection */}
+          <motion.div variants={itemVariants}>
+            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
+              <CardContent>
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  🌐 {t("language")}
+                </h2>
+                <LanguageSwitcher />
+              </CardContent>
+            </Card>
+          </motion.div>
+
           {/* Mode Selection */}
           <motion.div variants={itemVariants}>
             <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
