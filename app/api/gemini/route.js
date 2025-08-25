@@ -5,7 +5,7 @@ import { getDb } from "@/lib/mongodb-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// ----------- Helper: Metadata Parser ----------- 
+// ----------- Helper: Metadata Parser -----------
 function parseMetadata(text) {
   const titleMatch = text.match(/Title:\s*(.+)/i);
   const keywordsMatch = text.match(
@@ -38,7 +38,7 @@ function parseMetadata(text) {
   };
 }
 
-// ----------- API Route ----------- 
+// ----------- API Route -----------
 export async function POST(req) {
   try {
     if (!req.headers.get("content-type")?.includes("multipart/form-data")) {
@@ -109,7 +109,7 @@ export async function POST(req) {
 
     // ---- Call Gemini ----
     const response = await ai.models.generateContent({
-      model: "gemini-1.5-flash-latest",
+      model: "gemini-2.5-flash-lite",
       contents: contents,
     });
 
@@ -158,4 +158,3 @@ export async function POST(req) {
     );
   }
 }
-

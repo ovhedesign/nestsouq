@@ -7,9 +7,10 @@ import React, {
   useCallback,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import logo from "./logo.png"; // Removed as it's now a static asset in public
+import logo from "./logo.png";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/hooks";
 import { googleSignOut } from "@/lib/auth";
 import {
@@ -119,6 +120,7 @@ function reducer(state, action) {
 function UserDropdown({ user, userData }) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const t = useTranslations("HomePage");
 
   if (!user || !userData) return null;
 
@@ -170,7 +172,7 @@ function UserDropdown({ user, userData }) {
                   <div className="flex items-center gap-3">
                     <Coins className="w-6 h-6 text-amber-400" />
                     <div>
-                      <p className="text-gray-300 text-sm">Credits</p>
+                      <p className="text-gray-300 text-sm">{t("credits")}</p>
                       <p className="font-bold text-white text-xl">
                         {userData.credits}
                       </p>
@@ -180,17 +182,17 @@ function UserDropdown({ user, userData }) {
                     onClick={() => router.push("/pricing")}
                     className="bg-amber-500 hover:bg-amber-600 text-black font-bold py-2 px-4 rounded-lg text-sm"
                   >
-                    Get More
+                    {t("getMore")}
                   </Button>
                 </div>
                 {userData.isPremium && (
                   <div className="bg-gray-800/50 rounded-lg p-3">
-                    <p className="text-gray-300 text-sm">Current Plan:</p>
+                    <p className="text-gray-300 text-sm">{t("currentPlan")}</p>
                     <p className="font-bold text-white text-lg">
                       {userData.paymentInfo?.planId || "N/A"}
                     </p>
                     <p className="text-gray-400 text-xs mt-1">
-                      Expires:{" "}
+                      {t("expires")}{" "}
                       {new Date(userData.expireDate).toLocaleDateString()}
                     </p>
                   </div>
@@ -203,7 +205,7 @@ function UserDropdown({ user, userData }) {
                 className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 rounded-md transition-colors"
               >
                 <LogOut className="w-5 h-5" />
-                <span>Sign Out</span>
+                <span>{t("signOut")}</span>
               </button>
             </div>
           </motion.div>
@@ -219,6 +221,7 @@ export default function DashboardPage() {
   const { user, userData, loading: authLoading, updateUserData } = useAuth();
   const router = useRouter();
   const inputRef = useRef(null);
+  const t = useTranslations("HomePage");
 
   const handleSelected = (list) => {
     const arr = Array.from(list || []);
@@ -230,7 +233,7 @@ export default function DashboardPage() {
     if (rejected.length) {
       dispatch({
         type: "SET_ERROR_MSG",
-        payload: `Rejected ${rejected.length} file(s) — unsupported type.`,
+        payload: t("unsupportedFileType", { count: rejected.length }),
       });
       setTimeout(() => dispatch({ type: "SET_ERROR_MSG", payload: "" }), 3000);
     }
@@ -334,7 +337,7 @@ export default function DashboardPage() {
     }
 
     if (state.files.length === 0) {
-      dispatch({ type: "SET_ERROR_MSG", payload: "No files to process" });
+      dispatch({ type: "SET_ERROR_MSG", payload: t("noFilesToProcess") });
       setTimeout(() => dispatch({ type: "SET_ERROR_MSG", payload: "" }), 2500);
       return;
     }
@@ -342,7 +345,7 @@ export default function DashboardPage() {
     if (userData.credits < state.files.length) {
       dispatch({
         type: "SET_ERROR_MSG",
-        payload: "Not enough credits. Please upgrade your plan.",
+        payload: t("notEnoughCredits"),
       });
       setTimeout(() => {
         dispatch({ type: "SET_ERROR_MSG", payload: "" });
@@ -470,13 +473,13 @@ export default function DashboardPage() {
               onClick={() => router.push("/login")}
               className="bg-transparent border border-amber-500 text-amber-500 hover:bg-amber-500 hover:text-black transition-all duration-300"
             >
-              Login
+              {t("login")}
             </Button>
             <Button
               onClick={() => router.push("/pricing")}
               className="bg-amber-500 text-black hover:bg-amber-600 transition-all duration-300"
             >
-              Pricing
+              {t("pricing")}
             </Button>
           </motion.div>
         )}
@@ -495,7 +498,8 @@ export default function DashboardPage() {
             <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
               <CardContent>
                 <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Sparkles className="w-5 h-5 text-amber-400" /> Mode Selection
+                  <Sparkles className="w-5 h-5 text-amber-400" />{" "}
+                  {t("modeSelection")}
                 </h2>
                 <div className="flex gap-2">
                   <Button
@@ -508,7 +512,7 @@ export default function DashboardPage() {
                         : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
                     }`}
                   >
-                    Metadata
+                    {t("metadata")}
                   </Button>
                   <Button
                     onClick={() =>
@@ -520,7 +524,7 @@ export default function DashboardPage() {
                         : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
                     }`}
                   >
-                    Prompt
+                    {t("prompt")}
                   </Button>
                 </div>
               </CardContent>
@@ -534,17 +538,17 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-2">
                   <h2 className="text-lg font-semibold flex items-center gap-2">
                     <Settings className="w-5 h-5 text-amber-400" />{" "}
-                    Customization
+                    {t("customization")}
                   </h2>
                   <Button
                     onClick={() => dispatch({ type: "RESET_SLIDERS" })}
                     className="text-xs px-3 py-1 border border-gray-700 hover:bg-gray-600 transition-colors"
                   >
-                    Reset
+                    {t("reset")}
                   </Button>
                 </div>
                 <SliderRow
-                  label="Title Words"
+                  label={t("titleWords")}
                   hint="min & max"
                   min={1}
                   max={18}
@@ -565,7 +569,7 @@ export default function DashboardPage() {
                   suffix="words"
                 />
                 <SliderRow
-                  label="Keywords Count"
+                  label={t("keywordsCount")}
                   hint="min & max"
                   min={1}
                   max={50}
@@ -585,7 +589,7 @@ export default function DashboardPage() {
                   }
                 />
                 <SliderRow
-                  label="Description Words"
+                  label={t("descriptionWords")}
                   hint="min & max"
                   min={1}
                   max={25}
@@ -623,14 +627,14 @@ export default function DashboardPage() {
                   ) : (
                     <CheckCircle2 className="w-5 h-5" />
                   )}
-                  {state.loading ? "Processing..." : "Process Files"}
+                  {state.loading ? t("processing") : t("processFiles")}
                 </Button>
                 <Button
                   onClick={downloadCsv}
                   disabled={state.fileResults.length === 0}
                   className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold flex items-center justify-center gap-2 transition-all duration-300 hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
                 >
-                  <Download className="w-5 h-5" /> Download CSV
+                  <Download className="w-5 h-5" /> {t("downloadCSV")}
                 </Button>
                 <AnimatePresence>
                   {state.errorMsg && (
@@ -661,8 +665,8 @@ export default function DashboardPage() {
             <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
               <CardContent className="pt-6">
                 <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <Upload className="w-6 h-6 text-amber-400" /> Upload Your
-                  Files
+                  <Upload className="w-6 h-6 text-amber-400" />{" "}
+                  {t("uploadYourFiles")}
                 </h2>
                 <input
                   type="file"
@@ -702,9 +706,9 @@ export default function DashboardPage() {
                 >
                   <Upload className="w-10 h-10 text-gray-500 mb-3 transition-transform duration-300 group-hover:scale-110" />
                   <p className="text-lg font-semibold text-gray-300">
-                    Drag & drop files here
+                    {t("dragAndDrop")}
                   </p>
-                  <p className="text-gray-500">or click to select</p>
+                  <p className="text-gray-500">{t("orClickToSelect")}</p>
                 </div>
               </CardContent>
             </Card>
@@ -718,13 +722,13 @@ export default function DashboardPage() {
                   <h2 className="text-2xl font-bold flex items-center gap-2">
                     <FileText className="w-6 h-6 text-amber-400" />
                     {state.mode === "meta"
-                      ? "Metadata Results"
-                      : "Prompt Results"}
+                      ? t("metadataResults")
+                      : t("promptResults")}
                   </h2>
                   {state.fileResults.length > 0 && (
                     <span className="text-sm bg-gray-800 px-3 py-1 rounded-full">
-                      {state.fileResults.length} result
-                      {state.fileResults.length !== 1 ? "s" : ""}
+                      {state.fileResults.length}{" "}
+                      {t("result", { count: state.fileResults.length })}
                     </span>
                   )}
                 </div>
@@ -732,11 +736,9 @@ export default function DashboardPage() {
                   <div className="text-center py-16 text-gray-500 flex flex-col items-center justify-center h-full">
                     <FileImage className="w-20 h-20 mx-auto mb-6 opacity-30" />
                     <p className="text-lg font-semibold">
-                      No files processed yet
+                      {t("noFilesProcessed")}
                     </p>
-                    <p className="text-sm">
-                      Upload files and click Process to see results here.
-                    </p>
+                    <p className="text-sm">{t("uploadFilesPrompt")}</p>
                   </div>
                 ) : (
                   <motion.div
@@ -767,11 +769,13 @@ export default function DashboardPage() {
         <motion.aside className="lg:col-span-3 space-y-6">
           <Card className="bg-gray-900/50 border-gray-800 shadow-lg h-full">
             <CardContent className="p-4 space-y-4 overflow-y-auto max-h-[80vh]">
-              <h2 className="text-lg font-semibold mb-2">Selected Images</h2>
+              <h2 className="text-lg font-semibold mb-2">
+                {t("selectedImages")}
+              </h2>
 
               {state.previews.length === 0 ? (
                 <div className="flex items-center justify-center h-40 text-gray-500 text-sm border border-dashed border-gray-700 rounded-lg">
-                  No images selected
+                  {t("noImagesSelected")}
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-4">
