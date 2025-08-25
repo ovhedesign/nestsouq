@@ -6,8 +6,7 @@
     "dev": "next dev --turbopack",
     "build": "cross-env NEXT_DEBUG=true next build --turbopack",
     "start": "next start",
-    "lint": "eslint",
-    "postinstall": "npm install --prefix ./node_modules/sharp --force --platform=linux --arch=x64 sharp"
+    "lint": "eslint"
   },
   "dependencies": {
     "@google/genai": "^1.15.0",
