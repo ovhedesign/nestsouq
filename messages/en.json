@@ -31,7 +31,10 @@
     "notEnoughCredits": "Not enough credits. Please upgrade your plan.",
     "noFilesToProcess": "No files to process",
     "unsupportedFileType": "Rejected {count} file(s) — unsupported type.",
-    "language": "Language"
+    "language": "Language",
+    "imageCompressionFailed": "Failed to compress {filename}. Using original file.",
+    "selectedFiles": "Selected Files",
+    "noSelectedFiles": "No Selected Files"
   },
   "LanguageSwitcher": {
     "english": "English",

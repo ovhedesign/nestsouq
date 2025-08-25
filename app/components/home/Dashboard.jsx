@@ -9,7 +9,7 @@ import React, {
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "./logo.png";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/hooks";
 import { googleSignOut } from "@/lib/auth";
@@ -221,6 +221,8 @@ export default function DashboardPage() {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { user, userData, loading: authLoading, updateUserData } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const currentLocale = pathname.split("/")[1];
   const inputRef = useRef(null);
   const t = useTranslations("HomePage");
 
@@ -282,6 +284,7 @@ export default function DashboardPage() {
       fd.append("minDesc", String(state.minDesc));
       fd.append("maxDesc", String(state.maxDesc));
       fd.append("uid", user.uid);
+      fd.append("locale", currentLocale);
 
       const res = await fetch("/api/gemini", {
         method: "POST",

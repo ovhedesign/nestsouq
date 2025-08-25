@@ -1,10 +1,11 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
-import i18nConfig from "../../i18n.js"; // adjust path if i18n.js is elsewhere
-import "../globals.css"; // correct path
+import { Inter, Geist_Mono } from "next/font/google"; // Changed Geist to Inter
+import i18nConfig from "../../i18n.js"; // adjust path if needed
+import localFont from 'next/font/local';
+import "../globals.css";
 
 // Initialize fonts
-const geistSans = Geist({
+const inter = Inter({ // Changed geistSans to inter
   variable: "--font-geist-sans",
   subsets: ["latin"],
 });
@@ -14,13 +15,19 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export default async function RootLayout({ children, params: { locale } }) {
+const almarai = localFont({
+  src: '../../Almarai.ttf', // Path relative to layout.js
+  variable: '--font-almarai',
+});
+
+export default async function RootLayout({ children, params }) {
+  const { locale } = await params; // ✅ await params
   const { messages } = await i18nConfig({ locale });
 
   return (
     <html lang={locale || "en"} suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistMono.variable} antialiased ${locale === 'ar' ? almarai.variable : inter.variable}`}
       >
         <NextIntlClientProvider messages={messages}>
           {children}

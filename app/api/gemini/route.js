@@ -5,7 +5,7 @@ import { getDb } from "@/lib/mongodb-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// ----------- Helper: Metadata Parser -----------
+// ----------- Helper: Metadata Parser ----------- 
 function parseMetadata(text) {
   const titleMatch = text.match(/Title:\s*(.+)/i);
   const keywordsMatch = text.match(
@@ -38,7 +38,7 @@ function parseMetadata(text) {
   };
 }
 
-// ----------- API Route -----------
+// ----------- API Route ----------- 
 export async function POST(req) {
   try {
     if (!req.headers.get("content-type")?.includes("multipart/form-data")) {
@@ -51,6 +51,7 @@ export async function POST(req) {
     const formData = await req.formData();
     const file = formData.get("file");
     const uid = formData.get("uid");
+    const locale = formData.get("locale") || "en"; // Default to English
 
     // Convert formData fields safely
     const mode = formData.get("mode") || "meta";
@@ -95,6 +96,8 @@ export async function POST(req) {
     // ---- Initialize Gemini ----
     const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
+    const languageInstruction = locale === "ar" ? "in Arabic" : "in English";
+
     const contents = [
       {
         inlineData: {
@@ -103,7 +106,7 @@ export async function POST(req) {
         },
       },
       {
-        text: `Analyze this ${mimeType} image and generate comprehensive metadata for ${mode} mode.\n        \nRespond EXACTLY in this format:\nTitle: <title>\nKeywords: <comma-separated keywords>\nDescription: <description>\nCategory: <comma-separated categories>\n\nRequirements:\n- Title: ${minTitle}-${maxTitle} words\n- Keywords: ${minKeywords}-${maxKeywords} items\n- Description: ${minDesc}-${maxDesc} words\n- Be accurate and descriptive`,
+        text: `Analyze this ${mimeType} image and generate comprehensive metadata for ${mode} mode ${languageInstruction}.\n        \nRespond EXACTLY in this format:\nTitle: <title>\nKeywords: <comma-separated keywords>\nDescription: <description>\nCategory: <comma-separated categories>\n\nRequirements:\n- Title: ${minTitle}-${maxTitle} words\n- Keywords: ${minKeywords}-${maxKeywords} items\n- Description: ${minDesc}-${maxDesc} words\n- Be accurate and descriptive`,
       },
     ];
 

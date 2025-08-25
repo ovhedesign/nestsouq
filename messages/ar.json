@@ -31,7 +31,10 @@
     "notEnoughCredits": "لا توجد أرصدة كافية. يرجى ترقية خطتك.",
     "noFilesToProcess": "لا توجد ملفات للمعالجة",
     "unsupportedFileType": "تم رفض {count} ملف (ملفات) - نوع غير مدعوم.",
-    "language": "اللغة"
+    "language": "اللغة",
+    "imageCompressionFailed": "فشل ضغط {filename}. استخدام الملف الأصلي.",
+    "selectedFiles": "الملفات المختارة",
+    "noSelectedFiles": "لا توجد ملفات مختارة"
   },
   "LanguageSwitcher": {
     "english": "English",
