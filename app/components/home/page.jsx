@@ -649,12 +649,12 @@ export default function DashboardPage() {
           </motion.div>
         </motion.aside>
 
-        {/* RIGHT - UPLOAD & RESULTS */}
+        {/* CENTER - UPLOAD & RESULTS */}
         <motion.section
           variants={containerVariants}
           initial="hidden"
           animate="visible"
-          className="lg:col-span-9 space-y-6"
+          className="lg:col-span-6 space-y-6"
         >
           {/* File Selection */}
           <motion.div variants={cardVariants}>
@@ -706,50 +706,6 @@ export default function DashboardPage() {
                   </p>
                   <p className="text-gray-500">or click to select</p>
                 </div>
-                <AnimatePresence>
-                  {state.previews.length > 0 && (
-                    <motion.div
-                      variants={containerVariants}
-                      initial="hidden"
-                      animate="visible"
-                      className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4"
-                    >
-                      {state.previews.map((p, idx) => (
-                        <motion.div
-                          key={p.name + idx}
-                          variants={itemVariants}
-                          className="relative group aspect-square border border-gray-700 rounded-lg overflow-hidden shadow-md"
-                        >
-                          {p.url ? (
-                            <Image
-                              src={p.url}
-                              alt={p.name}
-                              layout="fill"
-                              objectFit="cover"
-                              className="group-hover:scale-110 transition-transform duration-300"
-                            />
-                          ) : (
-                            <FileImage className="w-full h-full text-gray-600 p-4" />
-                          )}
-                          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                removeFile(idx);
-                              }}
-                              className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1.5 z-10 transform transition-transform hover:scale-110"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                          <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-xs p-1.5 truncate text-center">
-                            {p.name}
-                          </div>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </CardContent>
             </Card>
           </motion.div>
@@ -789,25 +745,70 @@ export default function DashboardPage() {
                     animate="visible"
                     className="space-y-4 max-h-[600px] overflow-y-auto pr-2 -mr-2"
                   >
-                    {state.fileResults.map((f, idx) => {
-                      return (
-                        <motion.div key={f.file + idx} variants={itemVariants}>
-                          <ResultCard
-                            mode={state.mode}
-                            fileData={f}
-                            preview={{ url: f.previewUrl }}
-                            index={idx}
-                            onRemove={removeResult}
-                          />
-                        </motion.div>
-                      );
-                    })}
+                    {state.fileResults.map((f, idx) => (
+                      <motion.div key={f.file + idx} variants={itemVariants}>
+                        <ResultCard
+                          mode={state.mode}
+                          fileData={f}
+                          preview={{ url: f.previewUrl }}
+                          index={idx}
+                          onRemove={removeResult}
+                        />
+                      </motion.div>
+                    ))}
                   </motion.div>
                 )}
               </CardContent>
             </Card>
           </motion.div>
         </motion.section>
+
+        {/* RIGHT SIDEBAR (Previews) */}
+        <motion.aside className="lg:col-span-3 space-y-6">
+          <Card className="bg-gray-900/50 border-gray-800 shadow-lg h-full">
+            <CardContent className="p-4 space-y-4 overflow-y-auto max-h-[80vh]">
+              <h2 className="text-lg font-semibold mb-2">Selected Images</h2>
+
+              {state.previews.length === 0 ? (
+                <div className="flex items-center justify-center h-40 text-gray-500 text-sm border border-dashed border-gray-700 rounded-lg">
+                  No images selected
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-1 gap-4">
+                  {state.previews.map((p, idx) => (
+                    <motion.div
+                      key={p.name + idx}
+                      variants={itemVariants}
+                      className="relative group border border-gray-700 rounded-lg overflow-hidden shadow-md"
+                    >
+                      <div className="flex items-center justify-center bg-gray-800 h-32">
+                        <Image
+                          src={p.url}
+                          alt={p.name}
+                          width={120}
+                          height={120}
+                          className="object-contain max-h-28"
+                        />
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFile(idx);
+                        }}
+                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1.5 shadow-md hover:scale-110 transition"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                      <p className="text-xs text-center truncate p-1 bg-gray-800">
+                        {p.name}
+                      </p>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.aside>
       </main>
     </div>
   );
