@@ -25,6 +25,10 @@ export default async function RootLayout({ children, params: { locale } }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content={siteTitle} />
+        <meta
+          name="developer-website"
+          content="https://dev-sahariarsupto.vercel.app"
+        ></meta>
         <meta property="og:description" content={siteDescription} />
         <meta property="og:url" content={siteUrl} />
         <meta property="og:image" content={socialImage} />
