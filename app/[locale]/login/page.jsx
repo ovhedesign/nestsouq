@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from 'next-intl';
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { googleSignIn, auth } from "@/lib/auth"; // Assume these are defined
@@ -13,6 +14,7 @@ import image from "./login.png"; // replace with your image
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
+  const t = useTranslations('Login');
   const router = useRouter();
   const searchParams = typeof window !== "undefined" ? useSearchParams() : null;
 
@@ -107,13 +109,13 @@ export default function LoginPage() {
           </div>
 
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white text-center">
-            Welcome to
+            {t('welcomeTo')}
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-amber-400 to-yellow-200 block text-4xl sm:text-5xl mt-1">
-              NestSouq
+              {t('nestSouq')}
             </span>
           </h1>
           <p className="mt-3 sm:mt-4 text-gray-400 text-center text-sm sm:text-base">
-            Sign in to begin analyzing your images with AI.
+            {t('signInPrompt')}
           </p>
 
           <div className="mt-10 sm:mt-12">
@@ -131,7 +133,7 @@ export default function LoginPage() {
                 <FcGoogle size={26} />
               )}
               <span className="z-10">
-                {loading ? "Authenticating..." : "Continue with Google"}
+                {loading ? t('authenticating') : t('continueWithGoogle')}
               </span>
             </motion.button>
           </div>
@@ -139,12 +141,12 @@ export default function LoginPage() {
           {/* Terms */}
           <div className="mt-8 text-center">
             <p className="text-xs sm:text-sm text-gray-500">
-              By clicking "Continue with Google," you agree to our
+              {t('termsAgreement')}
               <button
                 onClick={() => setShowTerms(!showTerms)}
                 className="text-amber-400 hover:text-amber-300 transition-colors duration-200 ml-1 font-medium underline-offset-4 hover:underline focus:outline-none"
               >
-                Terms & Conditions
+                {t('termsAndConditions')}
               </button>
               .
             </p>
@@ -158,18 +160,16 @@ export default function LoginPage() {
                 className="mt-4 text-gray-400 text-xs bg-gray-800/50 p-4 rounded-xl max-h-48 overflow-y-auto border border-gray-700/50"
               >
                 <h3 className="text-white font-semibold mb-2">
-                  Service Agreement Summary
+                  {t('serviceAgreementSummary')}
                 </h3>
                 <p>
-                  1. Data Use: We use your basic profile data (name, email,
-                  photo) for account creation and personalized services.
+                  {t('dataUse')}
                 </p>
                 <p className="mt-2">
-                  2. Acceptable Use: You must not misuse our services.
+                  {t('acceptableUse')}
                 </p>
                 <p className="mt-2">
-                  3. Disclaimer: NestSouq is not liable for data loss or service
-                  downtime. Full terms apply.
+                  {t('disclaimer')}
                 </p>
               </motion.div>
             )}
