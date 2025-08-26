@@ -15,7 +15,7 @@ export default async function RootLayout({ children, params: { locale } }) {
   const siteDescription =
     "NestSouq helps Middle East creators transform images into AI prompts and metadata instantly.";
   const siteUrl = "https://nestsouq.com"; // Replace with your real domain
-  const socialImage = `${siteUrl}/social-image.png`; // Place an OG image in /public
+  const socialImage = `${siteUrl}/${locale}/social-image.png`;
 
   return (
     <html lang={locale || "en"}>
