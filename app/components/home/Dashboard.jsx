@@ -75,6 +75,7 @@ const cardVariants = {
 // --- Reducer ---
 const initialState = {
   mode: "meta", // meta or prompt
+  platform: "default",
   minTitle: 14,
   maxTitle: 20,
   minKw: 45,
@@ -92,6 +93,8 @@ function reducer(state, action) {
   switch (action.type) {
     case "SET_MODE":
       return { ...state, mode: action.payload };
+    case "SET_PLATFORM":
+      return { ...state, platform: action.payload };
     case "SET_SLIDER":
       return { ...state, [action.payload.key]: action.payload.value };
     case "SET_FILES":
@@ -407,40 +410,109 @@ export default function DashboardPage() {
   const downloadCsv = () => {
     if (state.fileResults.length === 0) return;
 
-    const rows = [
-      [
-        "filename",
-        "title",
-        "keywords",
-        "description",
-        "category",
-        "engine",
-        "ok",
-      ],
-      ...state.fileResults.map((r) => [
-        r.file,
-        r.meta?.title || "",
-        Array.isArray(r.meta?.keywords)
-          ? r.meta.keywords.join("|")
-          : r.meta?.keywords || "",
-        r.meta?.description || "",
-        Array.isArray(r.meta?.category)
-          ? r.meta.category.join("|")
-          : r.meta?.category || "",
-        r.engine || "",
-        r.ok ? "ok" : "error",
-      ]),
-    ];
+    const { platform } = state;
+    let headers = [];
+    let rows = [];
 
-    const csv = rows
-      .map((r) => r.map((c) => `"${String(c).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
+    if (state.mode === "prompt") {
+      headers = ["Prompt"];
+      rows = state.fileResults.map((r) => [`"${r.prompt}"`]);
+    } else {
+      switch (platform) {
+        case "shutterstock":
+          headers = [
+            "Filename",
+            "Description",
+            "Keywords",
+            "Categories",
+            "Releases",
+          ];
+          rows = state.fileResults.map((r) => {
+            const filenameWithoutExt =
+              r.file.split(".").slice(0, -1).join(".") || r.file;
+            return [
+              `"${filenameWithoutExt}"`,
+              `"${r.meta?.title || ""}"`,
+              `"${(r.meta?.keywords || []).join(",")}"`,
+              `"${(r.meta?.category || []).join(", ")}"`,
+              "\"\"", // Releases
+            ];
+          });
+          break;
+        case "freepik":
+          headers = ["Filename", "Title", "Keywords"];
+          rows = state.fileResults.map((r) => {
+            const filenameWithoutExt =
+              r.file.split(".").slice(0, -1).join(".") || r.file;
+            return [
+              `"${filenameWithoutExt}.jpg"`,
+              `"${r.meta?.title || ""}"`,
+              `"${(r.meta?.keywords || []).join(",")}"`,
+            ];
+          });
+          break;
+        case "vecteezy":
+          headers = [
+            "Filename",
+            "Title",
+            "Description",
+            "Keywords",
+            "Image Type",
+          ];
+          rows = state.fileResults.map((r) => {
+            const filenameWithoutExt =
+              r.file.split(".").slice(0, -1).join(".") || r.file;
+            return [
+              `"${filenameWithoutExt}"`,
+              `"${r.meta?.title || ""}"`,
+              `"${r.meta?.description || ""}"`,
+              `"${(r.meta?.keywords || []).join(",")}"`,
+              "\"Photo\"",
+            ];
+          });
+          break;
+        default:
+          headers = [
+            "filename",
+            "title",
+            "keywords",
+            "description",
+            "category",
+            "engine",
+            "ok",
+          ];
+          rows = state.fileResults.map((r) => [
+            `"${r.file}"`,
+            `"${r.meta?.title || ""}"`,
+            `"${(
+              Array.isArray(r.meta?.keywords)
+                ? r.meta.keywords.join("|")
+                : r.meta?.keywords || ""
+            )}"`,
+            `"${r.meta?.description || ""}"`,
+            `"${(
+              Array.isArray(r.meta?.category)
+                ? r.meta.category.join("|")
+                : r.meta?.category || ""
+            )}"`,
+            `"${r.engine || ""}"`,
+            `"${r.ok ? "ok" : "error"}"`,
+          ]);
+          break;
+      }
+    }
 
-    const blob = new Blob([csv], { type: "text/csv" });
+    const csv = [
+      headers.join(","),
+      ...rows.map((row) => row.join(",")),
+    ].join("\n");
+
+    const BOM = "\uFEFF";
+    const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "results.csv";
+    a.download = `${platform}_results.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -565,6 +637,40 @@ export default function DashboardPage() {
                   >
                     {t("prompt")}
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Platform Selection */}
+          <motion.div variants={itemVariants}>
+            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
+              <CardContent>
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Download className="w-5 h-5 text-amber-400" />{" "}
+                  {t("platformSelect")}
+                </h2>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "default", name: t("Default") },
+                    { id: "shutterstock", name: t("Shutterstock") },
+                    { id: "freepik", name: t("Freepik") },
+                    { id: "vecteezy", name: t("Vecteezy") },
+                  ].map((p) => (
+                    <Button
+                      key={p.id}
+                      onClick={() =>
+                        dispatch({ type: "SET_PLATFORM", payload: p.id })
+                      }
+                      className={`border-2 transition-all duration-300 ${
+                        state.platform === p.id
+                          ? "bg-green-500 border-green-400 text-white shadow-md"
+                          : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
+                      }`}
+                    >
+                      {p.name}
+                    </Button>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -798,6 +904,7 @@ export default function DashboardPage() {
                           preview={{ url: f.previewUrl }}
                           index={idx}
                           onRemove={removeResult}
+                          platform={state.platform}
                         />
                       </motion.div>
                     ))}

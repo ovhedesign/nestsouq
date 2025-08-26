@@ -4,6 +4,7 @@
     "modeSelection": "اختيار الوضع",
     "metadata": "البيانات الوصفية",
     "prompt": "المطالبة",
+    "platform": "منصة",
     "customization": "التخصيص",
     "reset": "إعادة تعيين",
     "titleWords": "كلمات العنوان",
@@ -35,7 +36,12 @@
     "language": "اللغة",
     "imageCompressionFailed": "فشل ضغط {filename}. استخدام الملف الأصلي.",
     "selectedFiles": "الملفات المختارة",
-    "noSelectedFiles": "لا توجد ملفات مختارة"
+    "noSelectedFiles": "لا توجد ملفات مختارة",
+    "platformSelect": "منصة",
+    "Default": "افتراضي",
+    "Shutterstock": "شترستوك",
+    "Freepik": "فري بيك",
+    "Vecteezy": "فيكتيزي"
   },
   "Login": {
     "welcomeTo": "أهلاً بك في",

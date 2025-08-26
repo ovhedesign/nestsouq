@@ -4,6 +4,11 @@
     "modeSelection": "Mode Selection",
     "metadata": "Metadata",
     "prompt": "Prompt",
+    "platform": "Platform",
+    "generic": "Generic",
+    "adobeStock": "Adobe Stock",
+    "freepik": "Freepik",
+    "shutterstock": "Shutterstock",
     "customization": "Customization",
     "reset": "Reset",
     "titleWords": "Title Words",
@@ -35,7 +40,12 @@
     "language": "Language",
     "imageCompressionFailed": "Failed to compress {filename}. Using original file.",
     "selectedFiles": "Selected Files",
-    "noSelectedFiles": "No Selected Files"
+    "noSelectedFiles": "No Selected Files",
+    "platformSelect": "Platform",
+    "Default": "Default",
+    "Shutterstock": "Shutterstock",
+    "Freepik": "Freepik",
+    "Vecteezy": "Vecteezy"
   },
   "Login": {
     "welcomeTo": "Welcome to",

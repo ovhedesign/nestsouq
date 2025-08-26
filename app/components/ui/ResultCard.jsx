@@ -10,10 +10,19 @@ import {
   Download,
   CheckCircle2,
   AlertTriangle,
+  Image as ImageIcon,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export function ResultCard({ mode, fileData, preview, index, onRemove }) {
+export function ResultCard({
+  mode,
+  fileData,
+  preview,
+  index,
+  onRemove,
+  platform,
+}) {
   const [expanded, setExpanded] = useState(true);
   const [copiedField, setCopiedField] = useState(null);
 
@@ -27,27 +36,84 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
     }
   };
 
-  const handleDownloadCSV = () => {
+  const handleDownloadCSV = (platform) => {
     let csvContent = "";
-    let filename = `${fileData.file}.csv`;
+    let filename;
 
     if (mode === "meta" && fileData.meta) {
       const { title, keywords, description, category } = fileData.meta;
-      const headers = ["Title", "Keywords", "Description", "Category"];
-      const row = [
-        `"${title || ""}"`,
-        `"${(keywords || []).join(", ")}"`,
-        `"${description || ""}"`,
-        `"${(category || []).join(", ")}"`,
-      ];
+      const filenameWithoutExt =
+        fileData.file.split(".").slice(0, -1).join(".") || fileData.file;
+      let headers = [];
+      let row = [];
+      filename = `${platform}_${fileData.file}.csv`;
+
+      switch (platform) {
+        case "shutterstock":
+          headers = [
+            "Filename",
+            "Description",
+            "Keywords",
+            "Categories",
+            "Releases",
+          ];
+          row = [
+            `"${filenameWithoutExt}"`,
+            `"${title || ""}"`,
+            `"${(keywords || []).join(",")}"`,
+            `"${(category || []).join(", ")}"`,
+            "",
+          ];
+          break;
+        case "freepik":
+          headers = ["Filename", "Title", "Keywords"];
+          row = [
+            `"${filenameWithoutExt}.jpg"`,
+            `"${title || ""}"`,
+            `"${(keywords || []).join(",")}"`,
+          ];
+          break;
+        case "vecteezy":
+          headers = [
+            "Filename",
+            "Title",
+            "Description",
+            "Keywords",
+            "Image Type",
+          ];
+          row = [
+            `"${filenameWithoutExt}"`,
+            `"${title || ""}"`,
+            `"${description || ""}"`,
+            `"${(keywords || []).join(",")}"`,
+            "Photo",
+          ];
+          break;
+        default:
+          headers = ["Title", "Keywords", "Description", "Category"];
+          row = [
+            `"${title || ""}"`,
+            `"${(keywords || []).join(", ")}"`,
+            `"${description || ""}"`,
+            `"${(category || []).join(", ")}"`,
+          ];
+          filename = `${fileData.file}.csv`;
+          break;
+      }
       csvContent = `${headers.join(",")}\n${row.join(",")}`;
     } else if (mode === "prompt" && fileData.prompt) {
       const headers = ["Prompt"];
       const row = [`"${fileData.prompt}"`];
       csvContent = `${headers.join(",")}\n${row.join(",")}`;
+      filename = `prompt_${fileData.file}.csv`;
     }
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    if (!csvContent) return;
+
+    // <-- Fix: Add BOM for Arabic/UTF-8 support
+    const blob = new Blob([`\uFEFF${csvContent}`], {
+      type: "text/csv;charset=utf-8;",
+    });
     const link = document.createElement("a");
     if (link.download !== undefined) {
       link.setAttribute("href", URL.createObjectURL(blob));
@@ -59,12 +125,24 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
     }
   };
 
-  const statusColor = fileData.ok ? "text-green-400" : "text-red-400";
-  const statusIcon = fileData.ok ? (
-    <CheckCircle2 className="w-5 h-5" />
-  ) : (
-    <AlertTriangle className="w-5 h-5" />
-  );
+  const isProcessing = fileData.ok === null;
+  const isSuccess = fileData.ok === true;
+
+  let statusIcon, statusText, statusColor;
+
+  if (isProcessing) {
+    statusIcon = <Loader2 className="w-5 h-5 animate-spin" />;
+    statusText = "Processing";
+    statusColor = "text-amber-400";
+  } else if (isSuccess) {
+    statusIcon = <CheckCircle2 className="w-5 h-5" />;
+    statusText = "Success";
+    statusColor = "text-green-400";
+  } else {
+    statusIcon = <AlertTriangle className="w-5 h-5" />;
+    statusText = "Error";
+    statusColor = "text-red-400";
+  }
 
   return (
     <div
@@ -92,7 +170,7 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
             <div className="flex items-center gap-2 mt-1 text-sm">
               <span className={`flex items-center gap-1 ${statusColor}`}>
                 {statusIcon}
-                {fileData.ok ? "Success" : "Error"}
+                {statusText}
               </span>
               <span className="text-gray-500">• {fileData.engine} Engine</span>
             </div>
@@ -100,7 +178,19 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          {fileData.ok && (
+          {fileData.ok && mode === "meta" && platform && (
+            <motion.button
+              onClick={() => handleDownloadCSV(platform)}
+              className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg shadow-md hover:bg-orange-600 transition w-full sm:w-auto justify-center"
+              title={`Download ${platform} CSV`}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Download className="w-5 h-5" />
+              <span className="font-medium capitalize">{platform} CSV</span>
+            </motion.button>
+          )}
+          {fileData.ok && mode === "prompt" && (
             <motion.button
               onClick={handleDownloadCSV}
               className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg shadow-md hover:bg-orange-600 transition w-full sm:w-auto justify-center"
