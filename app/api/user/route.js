@@ -1,9 +1,16 @@
 import { getDb } from "@/lib/mongodb-admin";
 import { NextResponse } from "next/server";
+import { authenticate } from "@/lib/firebase-admin";
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req) {
+  const authResult = await authenticate(req);
+
+  if (!authResult.authenticated) {
+    return NextResponse.json({ error: authResult.error }, { status: 401 });
+  }
+
   try {
     const { uid, email, displayName, photoURL } = await req.json();
 
