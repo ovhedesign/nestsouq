@@ -288,9 +288,7 @@ export default function DashboardPage() {
       if (file.type.startsWith("image/")) {
         try {
           compressedFile = await imageCompression(file, options);
-          
         } catch (error) {
-          
           // Optionally, handle the error or proceed with the original file
         }
       }
@@ -312,7 +310,7 @@ export default function DashboardPage() {
       const res = await fetch("/api/gemini", {
         method: "POST",
         headers: {
-          "Authorization": `Bearer ${idToken}`, // Add Authorization header
+          Authorization: `Bearer ${idToken}`, // Add Authorization header
         },
         body: fd, // Added this line
       }); // Added this closing
@@ -348,7 +346,6 @@ export default function DashboardPage() {
         previewUrl,
       };
     } catch (err) {
-      
       return {
         ok: false,
         meta: err.message || "Network error",
@@ -818,52 +815,72 @@ export default function DashboardPage() {
               <h2 className="text-lg font-semibold mb-2">
                 {t("selectedImages")}
               </h2>
-
               {state.previews.length === 0 ? (
                 <div className="flex items-center justify-center h-40 text-gray-500 text-sm border border-dashed border-gray-700 rounded-lg">
                   {t("noImagesSelected")}
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-4">
-                  {state.previews.map((p, idx) => (
-                    <motion.div
-                      key={p.name + idx}
-                      variants={itemVariants}
-                      className="relative group border border-gray-700 rounded-lg overflow-hidden shadow-md"
-                    >
-                      <div className="flex items-center justify-center bg-gray-800 h-32">
-                        <Image
-                          src={p.url}
-                          alt={p.name}
-                          width={120}
-                          height={120}
-                          className="object-contain max-h-28"
-                        />
-                      </div>
-                      {state.fileResults.find(
-                        (fr) => fr.file === p.name && fr.ok
-                      ) && (
-                        <div className="absolute top-1 left-1 bg-green-500 rounded-full p-1">
-                          <CheckCheck
-                            className="w-4 h-4 text-white"
-                            title="Processed"
-                          />
-                        </div>
-                      )}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeFile(idx);
-                        }}
-                        className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1.5 shadow-md hover:scale-110 transition"
+                  {state.previews.map((p, idx) => {
+                    const fileStatus = state.fileResults.find(
+                      (r) => r.file === p.name
+                    );
+                    const isProcessing = fileStatus && fileStatus.ok === null;
+                    const isProcessed = fileStatus && fileStatus.ok === true;
+                    const hasFailed = fileStatus && fileStatus.ok === false;
+
+                    return (
+                      <motion.div
+                        key={p.name + idx}
+                        variants={itemVariants}
+                        className="relative group border border-gray-700 rounded-lg overflow-hidden shadow-md"
                       >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                      <p className="text-xs text-center truncate p-1 bg-gray-800">
-                        {p.name}
-                      </p>
-                    </motion.div>
-                  ))}
+                        <div className="flex items-center justify-center bg-gray-800 h-32 relative">
+                          {/* Image */}
+                          <Image
+                            src={p.url}
+                            alt={p.name}
+                            width={120}
+                            height={120}
+                            className={`object-contain max-h-28 transition-all duration-300 ${
+                              isProcessing || isProcessed ? "opacity-50" : ""
+                            }`}
+                          />
+
+                          {/* Status Overlay */}
+                          {isProcessing && (
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                              <Loader2 className="w-8 h-8 text-amber-400 animate-spin" />
+                            </div>
+                          )}
+
+                          {isProcessed && (
+                            <div className="absolute inset-0 bg-green-900/50 flex items-center justify-center">
+                              <CheckCircle2 className="w-8 h-8 text-green-400" />
+                            </div>
+                          )}
+
+                          {hasFailed && (
+                            <div className="absolute inset-0 bg-red-900/50 flex items-center justify-center">
+                              <XCircle className="w-8 h-8 text-red-400" />
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeFile(idx);
+                          }}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1.5 shadow-md hover:scale-110 transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                        <p className="text-xs text-center truncate p-1 bg-gray-800">
+                          {p.name}
+                        </p>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
