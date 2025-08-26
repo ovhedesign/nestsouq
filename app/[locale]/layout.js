@@ -8,8 +8,7 @@ const almarai = localFont({
   display: "swap",
 });
 
-export default async function RootLayout({ children, params }) {
-  const { locale } = params;
+export default async function RootLayout({ children, params: { locale } }) {
   const { messages } = await i18nConfig({ locale });
 
   const siteTitle = "NestSouq – AI Powered Image to Prompt & Metadata";

@@ -1,19 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronUp, ChevronDown, Copy, CheckCheck, X, Download } from "lucide-react";
+import { ChevronUp, ChevronDown, Copy, Check, X, Download } from "lucide-react";
 
 export function ResultCard({ mode, fileData, preview, index, onRemove }) {
   const [expanded, setExpanded] = useState(true);
-  const [copied, setCopied] = useState(false);
+  const [copiedField, setCopiedField] = useState(null);
 
-  const copyToClipboard = async (text) => {
+  const copyToClipboard = async (text, field) => {
     try {
       await navigator.clipboard.writeText(text || "");
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
+      setCopiedField(field);
+      setTimeout(() => setCopiedField(null), 1500);
     } catch (err) {
-      // console.error('Copy failed', err);
+      console.error("Copy failed", err);
     }
   };
 
@@ -51,15 +51,15 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
 
   return (
     <div
-      className={`p-5 rounded-2xl shadow-lg border ${
+      className={`p-5 rounded-2xl shadow-xl border transition-all flex flex-col h-full ${
         mode === "meta"
-          ? "border-blue-500 bg-gray-800"
-          : "border-amber-500 bg-gray-900"
+          ? "border-blue-500 bg-gradient-to-br from-gray-800 to-gray-900"
+          : "border-amber-500 bg-gradient-to-br from-gray-900 to-gray-950"
       }`}
     >
       {/* File Header */}
-      <div className="flex justify-between items-center mb-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-3">
+        <div className="flex items-center gap-3 flex-grow">
           <button
             onClick={() => setExpanded(!expanded)}
             className="text-gray-400 hover:text-white"
@@ -70,39 +70,40 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
               <ChevronDown className="w-5 h-5" />
             )}
           </button>
+
           {/* Image Preview */}
           {preview?.url && (
-            <div className="mt-4 relative"> {/* Added relative class */}
-              <h4 className="text-sm font-semibold text-gray-400 mb-2">
-                Preview
-              </h4>
+            <div className="relative flex-shrink-0">
               <img
                 src={preview.url}
                 alt={fileData.file}
-                className="max-h-48 max-w-48 w-auto rounded-xl border border-gray-700 object-contain mx-auto"
+                className="max-h-20 max-w-[90px] rounded-xl border border-gray-700 object-contain"
               />
-              {fileData.ok && ( /* Conditional tick mark */
-                <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
-                  <CheckCheck className="w-5 h-5 text-white" title="Processed" />
+              {fileData.ok && (
+                <div className="absolute top-1 right-1 bg-green-500 rounded-full p-1 shadow-md">
+                  <Check className="w-3 h-3 text-white" title="Processed" />
                 </div>
               )}
             </div>
           )}
-          <span className="text-lg font-semibold truncate max-w-xs">
-            {fileData.file}
-          </span>
 
-          <span className="text-xs text-gray-400">{fileData.engine}</span>
+          <div className="flex flex-col flex-grow min-w-0">
+            <span className="text-lg font-semibold truncate">
+              {fileData.file}
+            </span>
+            <span className="text-xs text-gray-400">{fileData.engine}</span>
+          </div>
         </div>
+
         <div className="flex items-center gap-2">
           {fileData.ok && (
             <button
-              onClick={() => handleDownloadCSV()}
-              className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700"
+              onClick={handleDownloadCSV}
+              className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
               title="Download CSV"
             >
               <Download className="w-4 h-4" />
-              <span>Download CSV</span>
+              <span className="hidden sm:inline">CSV</span>
             </button>
           )}
           <button
@@ -110,88 +111,119 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
               copyToClipboard(
                 mode === "meta"
                   ? JSON.stringify(fileData.meta, null, 2)
-                  : fileData.prompt
+                  : fileData.prompt,
+                "full"
               )
             }
-            className="p-1 text-gray-400 hover:text-white"
-            title="Copy to clipboard"
+            className="p-1 text-gray-400 hover:text-white transition"
+            title="Copy full data"
           >
-            {copied ? (
-              <CheckCheck className="w-4 h-4" />
+            {copiedField === "full" ? (
+              <Check className="w-4 h-4 text-green-400" />
             ) : (
               <Copy className="w-4 h-4" />
             )}
           </button>
           <button
             onClick={() => onRemove(index)}
-            className="p-1 text-gray-400 hover:text-red-400"
-            title="Remove result"
+            className="p-1 text-gray-400 hover:text-red-400 transition"
+            title="Remove"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
       </div>
-      {expanded && (
+
+      {/* Expanded Body */}
+      {expanded && fileData.ok && (
         <>
-          {fileData.ok && mode === "meta" && (
-            <div className="space-y-4 text-gray-200">
+          {mode === "meta" && (
+            <div className="space-y-5 text-gray-200">
+              {/* Title */}
               <div>
-                <h4 className="text-sm font-semibold text-blue-400 mb-1">
-                  Title
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="text-sm font-semibold text-blue-400">Title</h4>
                   <button
-                    onClick={() => copyToClipboard(fileData.meta.title)}
-                    className="ml-2 p-1 text-gray-400 hover:text-white"
-                    title="Copy Title"
+                    onClick={() =>
+                      copyToClipboard(fileData.meta.title, "title")
+                    }
+                    className="p-1 text-gray-400 hover:text-white"
                   >
-                    <Copy className="w-4 h-4" />
+                    {copiedField === "title" ? (
+                      <Check className="w-4 h-4 text-green-400" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
                   </button>
-                </h4>
-                <p className="text-lg bg-gray-700 p-3 rounded-lg">
+                </div>
+                <p className="bg-gray-700 p-3 rounded-lg text-lg break-words">
                   {fileData.meta.title || "No title available"}
                 </p>
               </div>
+
+              {/* Keywords */}
               <div>
-                <h4 className="text-sm font-semibold text-blue-400 mb-1">
-                  Keywords ({fileData.meta.keywords?.length || 0})
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="text-sm font-semibold text-blue-400">
+                    Keywords ({fileData.meta.keywords?.length || 0})
+                  </h4>
                   <button
-                    onClick={() => copyToClipboard((fileData.meta.keywords || []).join(', '))}
-                    className="ml-2 p-1 text-gray-400 hover:text-white"
-                    title="Copy Keywords"
+                    onClick={() =>
+                      copyToClipboard(
+                        (fileData.meta.keywords || []).join(", "),
+                        "keywords"
+                      )
+                    }
+                    className="p-1 text-gray-400 hover:text-white"
                   >
-                    <Copy className="w-4 h-4" />
+                    {copiedField === "keywords" ? (
+                      <Check className="w-4 h-4 text-green-400" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
                   </button>
-                </h4>
+                </div>
                 <div className="flex flex-wrap gap-2">
-                  {fileData.meta.keywords &&
-                  fileData.meta.keywords.length > 0 ? (
-                    fileData.meta.keywords.map((keyword, i) => (
+                  {fileData.meta.keywords?.length ? (
+                    fileData.meta.keywords.map((k, i) => (
                       <span
                         key={i}
-                        className="bg-blue-900 text-blue-200 px-3 py-1 rounded-full text-sm"
+                        className="bg-blue-900/70 text-blue-200 px-3 py-1 rounded-full text-sm"
                       >
-                        {keyword}
+                        {k}
                       </span>
                     ))
                   ) : (
-                    <p className="text-gray-400">No keywords available</p>
+                    <p className="text-gray-400">No keywords</p>
                   )}
                 </div>
               </div>
+
+              {/* Description */}
               <div>
-                <h4 className="text-sm font-semibold text-blue-400 mb-1">
-                  Description
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="text-sm font-semibold text-blue-400">
+                    Description
+                  </h4>
                   <button
-                    onClick={() => copyToClipboard(fileData.meta.description)}
-                    className="ml-2 p-1 text-gray-400 hover:text-white"
-                    title="Copy Description"
+                    onClick={() =>
+                      copyToClipboard(fileData.meta.description, "desc")
+                    }
+                    className="p-1 text-gray-400 hover:text-white"
                   >
-                    <Copy className="w-4 h-4" />
+                    {copiedField === "desc" ? (
+                      <Check className="w-4 h-4 text-green-400" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
                   </button>
-                </h4>
-                <p className="bg-gray-700 p-3 rounded-lg">
+                </div>
+                <p className="bg-gray-700 p-3 rounded-lg break-words">
                   {fileData.meta.description || "No description available"}
                 </p>
               </div>
+
+              {/* Category */}
               {fileData.meta.category && (
                 <div>
                   <h4 className="text-sm font-semibold text-blue-400 mb-1">
@@ -201,7 +233,7 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
                     {fileData.meta.category.map((cat, i) => (
                       <span
                         key={i}
-                        className="bg-purple-900 text-purple-200 px-3 py-1 rounded-full text-sm"
+                        className="bg-purple-900/70 text-purple-200 px-3 py-1 rounded-full text-sm"
                       >
                         {cat}
                       </span>
@@ -211,12 +243,25 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
               )}
             </div>
           )}
-          {fileData.ok && mode === "prompt" && (
-            <div className="text-gray-300">
-              <h4 className="text-sm font-semibold text-amber-400 mb-2">
-                Generated Prompt
-              </h4>
-              <div className="bg-gray-700 p-4 rounded-lg font-mono whitespace-pre-wrap break-words">
+
+          {mode === "prompt" && (
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <h4 className="text-sm font-semibold text-amber-400">
+                  Generated Prompt
+                </h4>
+                <button
+                  onClick={() => copyToClipboard(fileData.prompt, "prompt")}
+                  className="p-1 text-gray-400 hover:text-white"
+                >
+                  {copiedField === "prompt" ? (
+                    <Check className="w-4 h-4 text-green-400" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
+              <div className="bg-gray-700 p-4 rounded-lg font-mono whitespace-pre-wrap break-words text-gray-100">
                 {fileData.prompt}
               </div>
             </div>

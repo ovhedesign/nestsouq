@@ -316,6 +316,7 @@ export default function DashboardPage() {
         },
         body: fd, // Added this line
       }); // Added this closing
+      const data = await res.json(); // Parse the JSON response
       if (!res.ok) {
         return {
           ok: false,
@@ -468,7 +469,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col font-sans">
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col font-sans relative z-0 shadow-inner-lg">
       {/* Top Bar */}
       <header className="flex items-center justify-between px-6 py-3 border-b border-gray-800 bg-gray-950/50 backdrop-blur-sm sticky top-0 z-20">
         <motion.div
@@ -790,7 +791,7 @@ export default function DashboardPage() {
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
-                    className="space-y-4 max-h-[600px] overflow-y-auto pr-2 -mr-2"
+                    className="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 -mr-2"
                   >
                     {state.fileResults.map((f, idx) => (
                       <motion.div key={f.file + idx} variants={itemVariants}>
