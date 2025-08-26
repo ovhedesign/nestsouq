@@ -1,13 +1,7 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import {
-  ChevronUp,
-  ChevronDown,
-  Copy,
-  CheckCheck,
-  X,
-} from 'lucide-react';
+import { useState } from "react";
+import { ChevronUp, ChevronDown, Copy, CheckCheck, X, Download } from "lucide-react";
 
 export function ResultCard({ mode, fileData, preview, index, onRemove }) {
   const [expanded, setExpanded] = useState(true);
@@ -15,7 +9,7 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
 
   const copyToClipboard = async (text) => {
     try {
-      await navigator.clipboard.writeText(text || '');
+      await navigator.clipboard.writeText(text || "");
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (err) {
@@ -23,12 +17,44 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
     }
   };
 
+  const handleDownloadCSV = () => {
+    let csvContent = "";
+    let filename = `${fileData.file}.csv`;
+
+    if (mode === "meta" && fileData.meta) {
+      const { title, keywords, description, category } = fileData.meta;
+      const headers = ["Title", "Keywords", "Description", "Category"];
+      const row = [
+        `"${title || ""}"`,
+        `"${(keywords || []).join(", ")}"`,
+        `"${description || ""}"`,
+        `"${(category || []).join(", ")}"`,
+      ];
+      csvContent = `${headers.join(",")}\n${row.join(",")}`;
+    } else if (mode === "prompt" && fileData.prompt) {
+      const headers = ["Prompt"];
+      const row = [`"${fileData.prompt}"`];
+      csvContent = `${headers.join(",")}\n${row.join(",")}`;
+    }
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+      link.setAttribute("href", URL.createObjectURL(blob));
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
   return (
     <div
       className={`p-5 rounded-2xl shadow-lg border ${
-        mode === 'meta'
-          ? 'border-blue-500 bg-gray-800'
-          : 'border-amber-500 bg-gray-900'
+        mode === "meta"
+          ? "border-blue-500 bg-gray-800"
+          : "border-amber-500 bg-gray-900"
       }`}
     >
       {/* File Header */}
@@ -44,23 +70,45 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
               <ChevronDown className="w-5 h-5" />
             )}
           </button>
+          {/* Image Preview */}
+          {preview?.url && (
+            <div className="mt-4 relative"> {/* Added relative class */}
+              <h4 className="text-sm font-semibold text-gray-400 mb-2">
+                Preview
+              </h4>
+              <img
+                src={preview.url}
+                alt={fileData.file}
+                className="max-h-48 max-w-48 w-auto rounded-xl border border-gray-700 object-contain mx-auto"
+              />
+              {fileData.ok && ( /* Conditional tick mark */
+                <div className="absolute top-2 right-2 bg-green-500 rounded-full p-1">
+                  <CheckCheck className="w-5 h-5 text-white" title="Processed" />
+                </div>
+              )}
+            </div>
+          )}
           <span className="text-lg font-semibold truncate max-w-xs">
             {fileData.file}
           </span>
-          <span
-            className={`font-bold text-sm ${
-              fileData.ok === true ? 'text-green-400' : fileData.ok === false ? 'text-red-400' : 'text-amber-400'
-            }`}
-          >
-            {fileData.ok === true ? '✅ OK' : fileData.ok === false ? '❌ Error' : 'Processing...'}
-          </span>
+
           <span className="text-xs text-gray-400">{fileData.engine}</span>
         </div>
         <div className="flex items-center gap-2">
+          {fileData.ok && (
+            <button
+              onClick={() => handleDownloadCSV()}
+              className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded-md hover:bg-green-700"
+              title="Download CSV"
+            >
+              <Download className="w-4 h-4" />
+              <span>Download CSV</span>
+            </button>
+          )}
           <button
             onClick={() =>
               copyToClipboard(
-                mode === 'meta'
+                mode === "meta"
                   ? JSON.stringify(fileData.meta, null, 2)
                   : fileData.prompt
               )
@@ -85,19 +133,33 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
       </div>
       {expanded && (
         <>
-          {fileData.ok && mode === 'meta' && (
+          {fileData.ok && mode === "meta" && (
             <div className="space-y-4 text-gray-200">
               <div>
                 <h4 className="text-sm font-semibold text-blue-400 mb-1">
                   Title
+                  <button
+                    onClick={() => copyToClipboard(fileData.meta.title)}
+                    className="ml-2 p-1 text-gray-400 hover:text-white"
+                    title="Copy Title"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
                 </h4>
                 <p className="text-lg bg-gray-700 p-3 rounded-lg">
-                  {fileData.meta.title || 'No title available'}
+                  {fileData.meta.title || "No title available"}
                 </p>
               </div>
               <div>
                 <h4 className="text-sm font-semibold text-blue-400 mb-1">
                   Keywords ({fileData.meta.keywords?.length || 0})
+                  <button
+                    onClick={() => copyToClipboard((fileData.meta.keywords || []).join(', '))}
+                    className="ml-2 p-1 text-gray-400 hover:text-white"
+                    title="Copy Keywords"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {fileData.meta.keywords &&
@@ -118,9 +180,16 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
               <div>
                 <h4 className="text-sm font-semibold text-blue-400 mb-1">
                   Description
+                  <button
+                    onClick={() => copyToClipboard(fileData.meta.description)}
+                    className="ml-2 p-1 text-gray-400 hover:text-white"
+                    title="Copy Description"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </button>
                 </h4>
                 <p className="bg-gray-700 p-3 rounded-lg">
-                  {fileData.meta.description || 'No description available'}
+                  {fileData.meta.description || "No description available"}
                 </p>
               </div>
               {fileData.meta.category && (
@@ -142,7 +211,7 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
               )}
             </div>
           )}
-          {fileData.ok && mode === 'prompt' && (
+          {fileData.ok && mode === "prompt" && (
             <div className="text-gray-300">
               <h4 className="text-sm font-semibold text-amber-400 mb-2">
                 Generated Prompt
@@ -150,19 +219,6 @@ export function ResultCard({ mode, fileData, preview, index, onRemove }) {
               <div className="bg-gray-700 p-4 rounded-lg font-mono whitespace-pre-wrap break-words">
                 {fileData.prompt}
               </div>
-            </div>
-          )}
-          {/* Image Preview */}
-          {preview?.url && (
-            <div className="mt-4">
-              <h4 className="text-sm font-semibold text-gray-400 mb-2">
-                Preview
-              </h4>
-              <img
-                src={preview.url}
-                alt={fileData.file}
-                className="max-h-64 w-auto rounded-xl border border-gray-700 object-contain mx-auto"
-              />
             </div>
           )}
         </>

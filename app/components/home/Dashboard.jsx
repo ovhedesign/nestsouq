@@ -26,6 +26,7 @@ import {
   Settings,
   FileText,
   Sparkles,
+  CheckCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import LanguageSwitcher from "../ui/LanguageSwitcher";
@@ -73,11 +74,11 @@ const cardVariants = {
 // --- Reducer ---
 const initialState = {
   mode: "meta", // meta or prompt
-  minTitle: 6,
-  maxTitle: 18,
-  minKw: 43,
-  maxKw: 50,
-  minDesc: 12,
+  minTitle: 14,
+  maxTitle: 20,
+  minKw: 45,
+  maxKw: 48,
+  minDesc: 15,
   maxDesc: 25,
   files: [], // array of File
   previews: [], // [{ name, url }]
@@ -258,7 +259,7 @@ export default function DashboardPage() {
     return () => {
       state.previews.forEach((p) => {
         try {
-          URL.revokeObjectURL(p.url);
+          // URL.revokeObjectURL(p.url); // Temporarily commented out
         } catch (e) {}
       });
     };
@@ -568,7 +569,7 @@ export default function DashboardPage() {
                   label={t("titleWords")}
                   hint="min & max"
                   min={1}
-                  max={18}
+                  max={50}
                   valueMin={state.minTitle}
                   valueMax={state.maxTitle}
                   setValueMin={(value) =>
@@ -609,7 +610,7 @@ export default function DashboardPage() {
                   label={t("descriptionWords")}
                   hint="min & max"
                   min={1}
-                  max={25}
+                  max={50}
                   valueMin={state.minDesc}
                   valueMax={state.maxDesc}
                   setValueMin={(value) =>
@@ -631,43 +632,6 @@ export default function DashboardPage() {
           </motion.div>
 
           {/* Actions */}
-          <motion.div variants={itemVariants}>
-            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
-              <CardContent className="flex flex-col gap-3 pt-6">
-                <Button
-                  onClick={processFiles}
-                  disabled={state.loading || state.files.length === 0}
-                  className="bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold flex items-center justify-center gap-2 transition-all duration-300 hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
-                >
-                  {state.loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <CheckCircle2 className="w-5 h-5" />
-                  )}
-                  {state.loading ? t("processing") : t("processFiles")}
-                </Button>
-                <Button
-                  onClick={downloadCsv}
-                  disabled={state.fileResults.length === 0}
-                  className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold flex items-center justify-center gap-2 transition-all duration-300 hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
-                >
-                  <Download className="w-5 h-5" /> {t("downloadCSV")}
-                </Button>
-                <AnimatePresence>
-                  {state.errorMsg && (
-                    <motion.p
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="text-red-400 text-sm text-center bg-red-900/20 p-2 rounded-lg"
-                    >
-                      {state.errorMsg}
-                    </motion.p>
-                  )}
-                </AnimatePresence>
-              </CardContent>
-            </Card>
-          </motion.div>
         </motion.aside>
 
         {/* CENTER - UPLOAD & RESULTS */}
@@ -727,6 +691,45 @@ export default function DashboardPage() {
                   </p>
                   <p className="text-gray-500">{t("orClickToSelect")}</p>
                 </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
+              <CardContent className="flex flex-col gap-3 pt-6">
+                <div className="flex gap-3"> {/* New flex container */}
+                  <Button
+                    onClick={processFiles}
+                    disabled={state.loading || state.files.length === 0}
+                    className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold flex items-center justify-center gap-2 transition-all duration-300 hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                  >
+                    {state.loading ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-5 h-5" />
+                    )}
+                    {state.loading ? t("processing") : t("processFiles")}
+                  </Button>
+                  <Button
+                    onClick={downloadCsv}
+                    disabled={state.fileResults.length === 0}
+                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold flex items-center justify-center gap-2 transition-all duration-300 hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                  >
+                    <Download className="w-5 h-5" /> {t("downloadCSV")}
+                  </Button>
+                </div>
+                <AnimatePresence>
+                  {state.errorMsg && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="text-red-400 text-sm text-center bg-red-900/20 p-2 rounded-lg"
+                    >
+                      {state.errorMsg}
+                    </motion.p>
+                  )}
+                </AnimatePresence>
               </CardContent>
             </Card>
           </motion.div>
@@ -811,6 +814,16 @@ export default function DashboardPage() {
                           className="object-contain max-h-28"
                         />
                       </div>
+                      {state.fileResults.find(
+                        (fr) => fr.file === p.name && fr.ok
+                      ) && (
+                        <div className="absolute top-1 left-1 bg-green-500 rounded-full p-1">
+                          <CheckCheck
+                            className="w-4 h-4 text-white"
+                            title="Processed"
+                          />
+                        </div>
+                      )}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();

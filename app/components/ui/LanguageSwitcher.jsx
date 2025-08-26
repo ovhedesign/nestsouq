@@ -35,7 +35,7 @@ export default function LanguageSwitcher() {
         onClick={() => handleChange("ar")}
         className={buttonClass("ar")}
       >
-        {t("arabic")}
+        العربية
       </button>
     </div>
   );
