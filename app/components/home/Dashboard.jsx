@@ -13,6 +13,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useAuth } from "@/lib/hooks";
 import { googleSignOut } from "@/lib/auth";
+import imageCompression from "browser-image-compression";
 import {
   Upload,
   CheckCircle2,
@@ -275,8 +276,27 @@ export default function DashboardPage() {
 
   const callGemini = async (file, previewUrl) => {
     try {
+      // Image compression options
+      const options = {
+        maxSizeMB: 0.07, // Target 50-70KB
+        maxWidthOrHeight: 800,
+        useWebWorker: true,
+        initialQuality: 0.5,
+      };
+
+      let compressedFile = file;
+      if (file.type.startsWith("image/")) {
+        try {
+          compressedFile = await imageCompression(file, options);
+          
+        } catch (error) {
+          
+          // Optionally, handle the error or proceed with the original file
+        }
+      }
+
       const fd = new FormData();
-      fd.append("file", file, file.name);
+      fd.append("file", compressedFile, compressedFile.name);
       fd.append("mode", state.mode);
       fd.append("minTitle", String(state.minTitle));
       fd.append("maxTitle", String(state.maxTitle));
@@ -287,12 +307,15 @@ export default function DashboardPage() {
       fd.append("uid", user.uid);
       fd.append("locale", currentLocale);
 
+      const idToken = await user.getIdToken(); // Get the ID token
+
       const res = await fetch("/api/gemini", {
         method: "POST",
-        body: fd,
-      });
-
-      const data = await res.json();
+        headers: {
+          "Authorization": `Bearer ${idToken}`, // Add Authorization header
+        },
+        body: fd, // Added this line
+      }); // Added this closing
       if (!res.ok) {
         return {
           ok: false,
@@ -324,7 +347,7 @@ export default function DashboardPage() {
         previewUrl,
       };
     } catch (err) {
-      console.error("callGemini error", err);
+      
       return {
         ok: false,
         meta: err.message || "Network error",
@@ -697,7 +720,9 @@ export default function DashboardPage() {
           <motion.div variants={itemVariants}>
             <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
               <CardContent className="flex flex-col gap-3 pt-6">
-                <div className="flex gap-3"> {/* New flex container */}
+                <div className="flex gap-3">
+                  {" "}
+                  {/* New flex container */}
                   <Button
                     onClick={processFiles}
                     disabled={state.loading || state.files.length === 0}
