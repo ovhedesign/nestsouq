@@ -564,7 +564,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col font-sans relative z-0 shadow-inner-lg">
       {/* Top Bar */}
-      <header className="flex flex-col lg:flex-row items-center justify-between px-6 py-3 border-b border-gray-800 bg-gray-950/50 backdrop-blur-sm sticky top-0 z-20">
+      <header className="flex items-center justify-between px-6 py-3 border-b border-gray-800 bg-gray-950/50 backdrop-blur-sm sticky top-0 z-20">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -834,6 +834,7 @@ export default function DashboardPage() {
                     {t("dragAndDrop")}
                   </p>
                   <p className="text-gray-500">{t("orClickToSelect")}</p>
+                  <p className="text-xs text-gray-600 mt-2">Supported formats: JPG, PNG, GIF, BMP, TIFF, SVG</p>
                 </div>
               </CardContent>
             </Card>

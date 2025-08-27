@@ -171,7 +171,7 @@ export function ResultCard({
       className={`p-5 rounded-2xl shadow-xl border transition-all flex flex-col h-full bg-gray-900 border-gray-700 hover:border-gray-600`}
     >
       {/* File Header */}
-      <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-800">
+      <div className="flex flex-wrap justify-between items-center gap-4 mb-4 pb-4 border-b border-gray-800">
         <div className="flex items-center gap-3 flex-grow min-w-0">
           <motion.button
             onClick={() => setExpanded(!expanded)}

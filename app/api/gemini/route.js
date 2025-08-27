@@ -5,7 +5,21 @@ import { getDb } from "@/lib/mongodb-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// ----------- Helper: Metadata Parser -----------
+const translations = {
+  en: {
+    svgEpsNotSupported: "SVG/EPS image processing is not supported.",
+  },
+  ar: {
+    svgEpsNotSupported: "معالجة صور SVG/EPS غير مدعومة.",
+  },
+};
+
+const t = (key, loc) => {
+    const lang = translations[loc] ? loc : 'en';
+    return translations[lang][key];
+}
+
+// ----------- Helper: Metadata Parser ----------- 
 function parseMetadata(text) {
   const titleMatch = text.match(/Title:\s*(.+)/i);
   const keywordsMatch = text.match(
@@ -38,7 +52,7 @@ function parseMetadata(text) {
   };
 }
 
-// ----------- API Route -----------
+// ----------- API Route ----------- 
 export async function POST(req) {
   try {
     if (!req.headers.get("content-type")?.includes("multipart/form-data")) {
@@ -86,7 +100,7 @@ export async function POST(req) {
       file.name?.toLowerCase().endsWith(".eps")
     ) {
       return NextResponse.json(
-        { error: "SVG/EPS image processing is not supported." },
+        { error: t("svgEpsNotSupported", locale) },
         { status: 400 }
       );
     }
