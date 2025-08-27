@@ -282,7 +282,7 @@ export default function DashboardPage() {
       // Image compression options
       const options = {
         maxSizeMB: 0.07, // Target 50-70KB
-        maxWidthOrHeight: 800,
+        maxWidthOrHeight: 700,
         useWebWorker: true,
         initialQuality: 0.5,
       };
@@ -471,6 +471,24 @@ export default function DashboardPage() {
             ];
           });
           break;
+        case "adobestock":
+          headers = [
+            "Filename",
+            "Title",
+            "Keywords",
+            "Description",
+          ];
+          rows = state.fileResults.map((r) => {
+            const filenameWithoutExt =
+              r.file.split(".").slice(0, -1).join(".") || r.file;
+            return [
+              `"${filenameWithoutExt}"`,
+              `"${r.meta?.title || ""}"`,
+              `"${(r.meta?.keywords || []).join(",")}"`,
+              `"${r.meta?.description || ""}"`,
+            ];
+          });
+          break;
         default:
           headers = [
             "filename",
@@ -540,7 +558,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col font-sans relative z-0 shadow-inner-lg">
       {/* Top Bar */}
-      <header className="flex items-center justify-between px-6 py-3 border-b border-gray-800 bg-gray-950/50 backdrop-blur-sm sticky top-0 z-20">
+      <header className="flex flex-col lg:flex-row items-center justify-between px-6 py-3 border-b border-gray-800 bg-gray-950/50 backdrop-blur-sm sticky top-0 z-20">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -557,6 +575,9 @@ export default function DashboardPage() {
             />
           </Link>
         </motion.div>
+
+        
+
         {authLoading ? (
           <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
         ) : user && userData ? (
@@ -604,6 +625,41 @@ export default function DashboardPage() {
             </Card>
           </motion.div>
 
+          {/* Platform Selection */}
+          <motion.div variants={itemVariants}>
+            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
+              <CardContent>
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Download className="w-5 h-5 text-amber-400" />{" "}
+                  {t("platformSelect")}
+                </h2>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { id: "default", name: t("Default") },
+                    { id: "shutterstock", name: t("Shutterstock") },
+                    { id: "freepik", name: t("Freepik") },
+                    { id: "vecteezy", name: t("Vecteezy") },
+                    { id: "adobestock", name: t("adobeStock") }, // Added AdobeStock
+                  ].map((p) => (
+                    <Button
+                      key={p.id}
+                      onClick={() =>
+                        dispatch({ type: "SET_PLATFORM", payload: p.id })
+                      }
+                      className={`border-2 transition-all duration-300 ${
+                        state.platform === p.id
+                          ? "bg-green-500 border-green-400 text-white shadow-md"
+                          : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
+                      }`}
+                    >
+                      {p.name}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
           {/* Mode Selection */}
           <motion.div variants={itemVariants}>
             <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
@@ -642,39 +698,7 @@ export default function DashboardPage() {
             </Card>
           </motion.div>
 
-          {/* Platform Selection */}
-          <motion.div variants={itemVariants}>
-            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
-              <CardContent>
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Download className="w-5 h-5 text-amber-400" />{" "}
-                  {t("platformSelect")}
-                </h2>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: "default", name: t("Default") },
-                    { id: "shutterstock", name: t("Shutterstock") },
-                    { id: "freepik", name: t("Freepik") },
-                    { id: "vecteezy", name: t("Vecteezy") },
-                  ].map((p) => (
-                    <Button
-                      key={p.id}
-                      onClick={() =>
-                        dispatch({ type: "SET_PLATFORM", payload: p.id })
-                      }
-                      className={`border-2 transition-all duration-300 ${
-                        state.platform === p.id
-                          ? "bg-green-500 border-green-400 text-white shadow-md"
-                          : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
-                      }`}
-                    >
-                      {p.name}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
+          
 
           {/* Sliders */}
           <motion.div variants={itemVariants}>

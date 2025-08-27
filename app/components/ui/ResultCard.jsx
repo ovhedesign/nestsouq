@@ -58,19 +58,19 @@ export function ResultCard({
             "Releases",
           ];
           row = [
-            `"${filenameWithoutExt}"`,
-            `"${title || ""}"`,
-            `"${(keywords || []).join(",")}"`,
-            `"${(category || []).join(", ")}"`,
-            "",
+            `"${filenameWithoutExt}"`, 
+            `"${title || ""}"`, 
+            `"${(keywords || []).join(",")}"`, 
+            `"${(category || []).join(", ")}"`, 
+            `""`
           ];
           break;
         case "freepik":
           headers = ["Filename", "Title", "Keywords"];
           row = [
-            `"${filenameWithoutExt}.jpg"`,
-            `"${title || ""}"`,
-            `"${(keywords || []).join(",")}"`,
+            `"${filenameWithoutExt}.jpg"`, 
+            `"${title || ""}"`, 
+            `"${(keywords || []).join(",")}"`
           ];
           break;
         case "vecteezy":
@@ -82,20 +82,34 @@ export function ResultCard({
             "Image Type",
           ];
           row = [
-            `"${filenameWithoutExt}"`,
-            `"${title || ""}"`,
-            `"${description || ""}"`,
-            `"${(keywords || []).join(",")}"`,
-            "Photo",
+            `"${filenameWithoutExt}"`, 
+            `"${title || ""}"`, 
+            `"${description || ""}"`, 
+            `"${(keywords || []).join(",")}"`, 
+            `"Photo"`
+          ];
+          break;
+        case "adobestock":
+          headers = [
+            "Filename",
+            "Title",
+            "Keywords",
+            "Description",
+          ];
+          row = [
+            `"${filenameWithoutExt}"`, 
+            `"${title || ""}"`, 
+            `"${(keywords || []).join(",")}"`, 
+            `"${description || ""}"`
           ];
           break;
         default:
           headers = ["Title", "Keywords", "Description", "Category"];
           row = [
-            `"${title || ""}"`,
-            `"${(keywords || []).join(", ")}"`,
-            `"${description || ""}"`,
-            `"${(category || []).join(", ")}"`,
+            `"${title || ""}"`, 
+            `"${(keywords || []).join(", ")}"`, 
+            `"${description || ""}"`, 
+            `"${(category || []).join(", ")}"`
           ];
           filename = `${fileData.file}.csv`;
           break;
@@ -118,6 +132,19 @@ export function ResultCard({
     if (link.download !== undefined) {
       link.setAttribute("href", URL.createObjectURL(blob));
       link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handleDownloadText = (text, filename) => {
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8;" });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+      link.setAttribute("href", URL.createObjectURL(blob));
+      link.setAttribute("download", `${filename}.txt`);
       link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
@@ -192,14 +219,14 @@ export function ResultCard({
           )}
           {fileData.ok && mode === "prompt" && (
             <motion.button
-              onClick={handleDownloadCSV}
+              onClick={() => handleDownloadText(fileData.prompt, fileData.file)}
               className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg shadow-md hover:bg-orange-600 transition w-full sm:w-auto justify-center"
-              title="Download CSV"
+              title="Download Prompt Text"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <Download className="w-5 h-5" />
-              <span className="font-medium">CSV</span>
+              <span className="font-medium">Text</span>
             </motion.button>
           )}
           <motion.button
@@ -271,33 +298,35 @@ export function ResultCard({
                   />
 
                   {/* Keywords */}
-                  <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-semibold text-blue-400">
-                        Keywords ({fileData.meta.keywords?.length || 0})
-                      </h4>
-                      <CopyButton
-                        field="keywords"
-                        value={(fileData.meta.keywords || []).join(", ")}
-                        copiedField={copiedField}
-                        copyToClipboard={copyToClipboard}
-                      />
+                  {mode === "meta" && (
+                    <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-semibold text-blue-400">
+                          Keywords ({fileData.meta.keywords?.length || 0})
+                        </h4>
+                        <CopyButton
+                          field="keywords"
+                          value={(fileData.meta.keywords || []).join(", ")}
+                          copiedField={copiedField}
+                          copyToClipboard={copyToClipboard}
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {fileData.meta.keywords?.length ? (
+                          fileData.meta.keywords.map((k, i) => (
+                            <span
+                              key={i}
+                              className="bg-blue-900/50 text-blue-200 px-3 py-1 rounded-full text-sm"
+                            >
+                              {k}
+                            </span>
+                          ))
+                        ) : (
+                          <p className="text-gray-400">No keywords</p>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {fileData.meta.keywords?.length ? (
-                        fileData.meta.keywords.map((k, i) => (
-                          <span
-                            key={i}
-                            className="bg-blue-900/50 text-blue-200 px-3 py-1 rounded-full text-sm"
-                          >
-                            {k}
-                          </span>
-                        ))
-                      ) : (
-                        <p className="text-gray-400">No keywords</p>
-                      )}
-                    </div>
-                  </div>
+                  )}
 
                   {/* Description */}
                   <FieldCard
@@ -334,7 +363,7 @@ export function ResultCard({
                 <div className="space-y-4">
                   <FieldCard
                     label="Generated Prompt"
-                    value={fileData.prompt}
+                    value={fileData.prompt.replace(/ with keywords.*$/, '')} // Attempt to remove " with keywords" and anything after it
                     field="prompt"
                     copiedField={copiedField}
                     copyToClipboard={copyToClipboard}
