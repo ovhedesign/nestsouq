@@ -58,19 +58,19 @@ export function ResultCard({
             "Releases",
           ];
           row = [
-            `"${filenameWithoutExt}"`, 
-            `"${title || ""}"`, 
-            `"${(keywords || []).join(",")}"`, 
-            `"${(category || []).join(", ")}"`, 
-            `""`
+            `"${filenameWithoutExt}"`,
+            `"${title || ""}"`,
+            `"${(keywords || []).join(",")}"`,
+            `"${(category || []).join(", ")}"`,
+            `""`,
           ];
           break;
         case "freepik":
           headers = ["Filename", "Title", "Keywords"];
           row = [
-            `"${filenameWithoutExt}.jpg"`, 
-            `"${title || ""}"`, 
-            `"${(keywords || []).join(",")}"`
+            `"${filenameWithoutExt}.jpg"`,
+            `"${title || ""}"`,
+            `"${(keywords || []).join(",")}"`,
           ];
           break;
         case "vecteezy":
@@ -82,34 +82,29 @@ export function ResultCard({
             "Image Type",
           ];
           row = [
-            `"${filenameWithoutExt}"`, 
-            `"${title || ""}"`, 
-            `"${description || ""}"`, 
-            `"${(keywords || []).join(",")}"`, 
-            `"Photo"`
+            `"${filenameWithoutExt}"`,
+            `"${title || ""}"`,
+            `"${description || ""}"`,
+            `"${(keywords || []).join(",")}"`,
+            `"Photo"`,
           ];
           break;
         case "adobestock":
-          headers = [
-            "Filename",
-            "Title",
-            "Keywords",
-            "Description",
-          ];
+          headers = ["Filename", "Title", "Keywords", "Description"];
           row = [
-            `"${filenameWithoutExt}"`, 
-            `"${title || ""}"`, 
-            `"${(keywords || []).join(",")}"`, 
-            `"${description || ""}"`
+            `"${filenameWithoutExt}"`,
+            `"${title || ""}"`,
+            `"${(keywords || []).join(",")}"`,
+            `"${description || ""}"`,
           ];
           break;
         default:
           headers = ["Title", "Keywords", "Description", "Category"];
           row = [
-            `"${title || ""}"`, 
-            `"${(keywords || []).join(", ")}"`, 
-            `"${description || ""}"`, 
-            `"${(category || []).join(", ")}"`
+            `"${title || ""}"`,
+            `"${(keywords || []).join(", ")}"`,
+            `"${description || ""}"`,
+            `"${(category || []).join(", ")}"`,
           ];
           filename = `${fileData.file}.csv`;
           break;
@@ -275,12 +270,15 @@ export function ResultCard({
           >
             <div className="mt-4 space-y-6 text-gray-300">
               {/* Image Preview (Now inside expanded section) */}
-              {preview?.url && (
+              {preview && (
                 <div className="flex justify-center mb-4">
                   <img
-                    src={preview.url}
-                    alt={fileData.file}
+                    src={typeof preview === "string" ? preview : preview.url}
+                    alt={fileData.file || "preview"}
                     className="max-h-40 rounded-xl border border-gray-700 object-contain shadow-lg"
+                    onError={(e) => {
+                      e.currentTarget.src = "/fallback.png";
+                    }}
                   />
                 </div>
               )}
@@ -363,7 +361,7 @@ export function ResultCard({
                 <div className="space-y-4">
                   <FieldCard
                     label="Generated Prompt"
-                    value={fileData.prompt.replace(/ with keywords.*$/, '')} // Attempt to remove " with keywords" and anything after it
+                    value={fileData.prompt.replace(/ with keywords.*$/, "")} // Attempt to remove " with keywords" and anything after it
                     field="prompt"
                     copiedField={copiedField}
                     copyToClipboard={copyToClipboard}

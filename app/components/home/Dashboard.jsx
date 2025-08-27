@@ -82,9 +82,7 @@ const initialState = {
   maxKw: 48,
   minDesc: 15,
   maxDesc: 25,
-  files: [], // array of File
-  previews: [], // [{ name, url }]
-  fileResults: [], // results for UI
+  processedFiles: [], // [{ originalFile: File, previewUrl: string, result: object }]
   loading: false,
   errorMsg: "",
 };
@@ -97,12 +95,27 @@ function reducer(state, action) {
       return { ...state, platform: action.payload };
     case "SET_SLIDER":
       return { ...state, [action.payload.key]: action.payload.value };
-    case "SET_FILES":
-      return { ...state, files: action.payload };
-    case "SET_PREVIEWS":
-      return { ...state, previews: action.payload };
-    case "SET_FILE_RESULTS":
-      return { ...state, fileResults: action.payload };
+    case "ADD_FILES":
+      return {
+        ...state,
+        processedFiles: [...state.processedFiles, ...action.payload],
+      };
+    case "UPDATE_FILE_RESULT":
+      return {
+        ...state,
+        processedFiles: state.processedFiles.map((file, i) =>
+          i === action.payload.index
+            ? { ...file, result: action.payload.result }
+            : file
+        ),
+      };
+    case "REMOVE_FILE":
+      return {
+        ...state,
+        processedFiles: state.processedFiles.filter(
+          (_, i) => i !== action.payload
+        ),
+      };
     case "SET_LOADING":
       return { ...state, loading: action.payload };
     case "SET_ERROR_MSG":
@@ -248,26 +261,18 @@ export default function DashboardPage() {
 
     if (accepted.length === 0) return;
 
-    dispatch({ type: "SET_FILES", payload: [...state.files, ...accepted] });
-    const newPreviews = accepted.map((f) => ({
-      name: f.name,
-      url: URL.createObjectURL(f),
+    const newProcessedFiles = accepted.map((f) => ({
+      originalFile: f,
+      previewUrl: URL.createObjectURL(f),
+      result: null, // Will be populated after Gemini call
     }));
     dispatch({
-      type: "SET_PREVIEWS",
-      payload: [...state.previews, ...newPreviews],
+      type: "ADD_FILES",
+      payload: newProcessedFiles,
     });
   };
 
-  useEffect(() => {
-    return () => {
-      state.previews.forEach((p) => {
-        try {
-          // URL.revokeObjectURL(p.url); // Temporarily commented out
-        } catch (e) {}
-      });
-    };
-  }, [state.previews]);
+  
 
   const onDrop = (e) => {
     e.preventDefault();
@@ -365,13 +370,10 @@ export default function DashboardPage() {
       return;
     }
 
-    if (state.files.length === 0) {
-      dispatch({ type: "SET_ERROR_MSG", payload: t("noFilesToProcess") });
-      setTimeout(() => dispatch({ type: "SET_ERROR_MSG", payload: "" }), 2500);
-      return;
-    }
-
-    if (userData.credits < state.files.length) {
+    if (
+      state.processedFiles.length === 0 ||
+      userData.credits < state.processedFiles.length
+    ) {
       dispatch({
         type: "SET_ERROR_MSG",
         payload: t("notEnoughCredits"),
@@ -385,30 +387,38 @@ export default function DashboardPage() {
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    const initialResults = state.files.map((f) => {
-      const preview = state.previews.find((p) => p.name === f.name);
-      return {
-        file: f.name,
-        ok: null,
-        meta: "Processing...",
-        engine: "gemini",
-        previewUrl: preview?.url,
-      };
-    });
-    dispatch({ type: "SET_FILE_RESULTS", payload: initialResults });
+    // Set initial processing state for all files
+    for (let i = 0; i < state.processedFiles.length; i++) {
+      const file = state.processedFiles[i];
+      dispatch({
+        type: "UPDATE_FILE_RESULT",
+        payload: {
+          index: i,
+          result: {
+            file: file.originalFile.name,
+            ok: null,
+            meta: "Processing...",
+            engine: "gemini",
+            previewUrl: file.previewUrl,
+          },
+        },
+      });
+    }
 
-    const promises = state.files.map((f) => {
-      const preview = state.previews.find((p) => p.name === f.name);
-      return callGemini(f, preview?.url);
-    });
-    const results = await Promise.all(promises);
-
-    dispatch({ type: "SET_FILE_RESULTS", payload: results });
+    for (let i = 0; i < state.processedFiles.length; i++) {
+      const file = state.processedFiles[i];
+      const result = await callGemini(file.originalFile, file.previewUrl);
+      dispatch({
+        type: "UPDATE_FILE_RESULT",
+        payload: { index: i, result: result },
+      });
+    }
     dispatch({ type: "SET_LOADING", payload: false });
   };
 
   const downloadCsv = () => {
-    if (state.fileResults.length === 0) return;
+    const results = state.processedFiles.filter((f) => f.result);
+    if (results.length === 0) return;
 
     const { platform } = state;
     let headers = [];
@@ -416,7 +426,7 @@ export default function DashboardPage() {
 
     if (state.mode === "prompt") {
       headers = ["Prompt"];
-      rows = state.fileResults.map((r) => [`"${r.prompt}"`]);
+      rows = results.map((file) => [`"${file.result.prompt}"`]);
     } else {
       switch (platform) {
         case "shutterstock":
@@ -427,25 +437,27 @@ export default function DashboardPage() {
             "Categories",
             "Releases",
           ];
-          rows = state.fileResults.map((r) => {
+          rows = results.map((file) => {
             const filenameWithoutExt =
-              r.file.split(".").slice(0, -1).join(".") || r.file;
+              file.result.file.split(".").slice(0, -1).join(".") ||
+              file.result.file;
             return [
               `"${filenameWithoutExt}"`,
-              `"${r.meta?.title || ""}"`,
-              `"${(r.meta?.keywords || []).join(",")}"`,
-              `"${(r.meta?.category || []).join(", ")}"`,
-              "\"\"", // Releases
+              `"${file.result.meta?.title || ""}"`,
+              `"${(file.result.meta?.keywords || []).join(",")}"`,
+              `"${(file.result.meta?.category || []).join(", ")}"`,
+              '""', // Releases
             ];
           });
           break;
         case "freepik":
           headers = ["Filename", "Title", "Keywords"];
-          rows = state.fileResults.map((r) => {
+          rows = results.map((file) => {
+            const r = file.result;
             const filenameWithoutExt =
               r.file.split(".").slice(0, -1).join(".") || r.file;
             return [
-              `"${filenameWithoutExt}.jpg"`,
+              `"${filenameWithoutExt}.jpg"`, 
               `"${r.meta?.title || ""}"`,
               `"${(r.meta?.keywords || []).join(",")}"`,
             ];
@@ -459,7 +471,8 @@ export default function DashboardPage() {
             "Keywords",
             "Image Type",
           ];
-          rows = state.fileResults.map((r) => {
+          rows = results.map((file) => {
+            const r = file.result;
             const filenameWithoutExt =
               r.file.split(".").slice(0, -1).join(".") || r.file;
             return [
@@ -467,18 +480,14 @@ export default function DashboardPage() {
               `"${r.meta?.title || ""}"`,
               `"${r.meta?.description || ""}"`,
               `"${(r.meta?.keywords || []).join(",")}"`,
-              "\"Photo\"",
+              '"Photo"',
             ];
           });
           break;
         case "adobestock":
-          headers = [
-            "Filename",
-            "Title",
-            "Keywords",
-            "Description",
-          ];
-          rows = state.fileResults.map((r) => {
+          headers = ["Filename", "Title", "Keywords", "Description"];
+          rows = results.map((file) => {
+            const r = file.result;
             const filenameWithoutExt =
               r.file.split(".").slice(0, -1).join(".") || r.file;
             return [
@@ -499,31 +508,33 @@ export default function DashboardPage() {
             "engine",
             "ok",
           ];
-          rows = state.fileResults.map((r) => [
-            `"${r.file}"`,
-            `"${r.meta?.title || ""}"`,
-            `"${(
+          rows = results.map((file) => {
+            const r = file.result;
+            return [
+              `"${r.file}"`,
+              `"${r.meta?.title || ""}"`,
+              `"${ 
               Array.isArray(r.meta?.keywords)
                 ? r.meta.keywords.join("|")
                 : r.meta?.keywords || ""
-            )}"`,
-            `"${r.meta?.description || ""}"`,
-            `"${(
+            }"`,
+              `"${r.meta?.description || ""}"`,
+              `"${
               Array.isArray(r.meta?.category)
                 ? r.meta.category.join("|")
                 : r.meta?.category || ""
-            )}"`,
-            `"${r.engine || ""}"`,
-            `"${r.ok ? "ok" : "error"}"`,
-          ]);
+            }"`,
+              `"${r.engine || ""}"`,
+              `"${r.ok ? "ok" : "error"}"`,
+            ];
+          });
           break;
       }
     }
 
-    const csv = [
-      headers.join(","),
-      ...rows.map((row) => row.join(",")),
-    ].join("\n");
+    const csv = [headers.join(","), ...rows.map((row) => row.join(","))].join(
+      "\n"
+    );
 
     const BOM = "\uFEFF";
     const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
@@ -538,22 +549,17 @@ export default function DashboardPage() {
   };
 
   const removeFile = (idx) => {
+    const fileToRemove = state.processedFiles[idx];
+    if (fileToRemove?.previewUrl) {
+      URL.revokeObjectURL(fileToRemove.previewUrl);
+    }
     dispatch({
-      type: "SET_FILES",
-      payload: state.files.filter((_, i) => i !== idx),
-    });
-    dispatch({
-      type: "SET_PREVIEWS",
-      payload: state.previews.filter((_, i) => i !== idx),
+      type: "REMOVE_FILE",
+      payload: idx,
     });
   };
 
-  const removeResult = (idx) => {
-    dispatch({
-      type: "SET_FILE_RESULTS",
-      payload: state.fileResults.filter((_, i) => i !== idx),
-    });
-  };
+  const results = state.processedFiles.filter((f) => f.result);
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col font-sans relative z-0 shadow-inner-lg">
@@ -575,8 +581,6 @@ export default function DashboardPage() {
             />
           </Link>
         </motion.div>
-
-        
 
         {authLoading ? (
           <Loader2 className="w-6 h-6 text-amber-400 animate-spin" />
@@ -624,42 +628,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </motion.div>
-
-          {/* Platform Selection */}
-          <motion.div variants={itemVariants}>
-            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
-              <CardContent>
-                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                  <Download className="w-5 h-5 text-amber-400" />{" "}
-                  {t("platformSelect")}
-                </h2>
-                <div className="grid grid-cols-2 gap-2">
-                  {[
-                    { id: "default", name: t("Default") },
-                    { id: "shutterstock", name: t("Shutterstock") },
-                    { id: "freepik", name: t("Freepik") },
-                    { id: "vecteezy", name: t("Vecteezy") },
-                    { id: "adobestock", name: t("adobeStock") }, // Added AdobeStock
-                  ].map((p) => (
-                    <Button
-                      key={p.id}
-                      onClick={() =>
-                        dispatch({ type: "SET_PLATFORM", payload: p.id })
-                      }
-                      className={`border-2 transition-all duration-300 ${
-                        state.platform === p.id
-                          ? "bg-green-500 border-green-400 text-white shadow-md"
-                          : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
-                      }`}
-                    >
-                      {p.name}
-                    </Button>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
           {/* Mode Selection */}
           <motion.div variants={itemVariants}>
             <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
@@ -673,11 +641,10 @@ export default function DashboardPage() {
                     onClick={() =>
                       dispatch({ type: "SET_MODE", payload: "meta" })
                     }
-                    className={`flex-1 border-2 transition-all duration-300 ${
-                      state.mode === "meta"
+                    className={`flex-1 border-2 transition-all duration-300 ${state.mode === "meta"
                         ? "bg-blue-500 border-blue-400 text-white shadow-md"
                         : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
-                    }`}
+                      }`}
                   >
                     {t("metadata")}
                   </Button>
@@ -685,11 +652,10 @@ export default function DashboardPage() {
                     onClick={() =>
                       dispatch({ type: "SET_MODE", payload: "prompt" })
                     }
-                    className={`flex-1 border-2 transition-all duration-300 ${
-                      state.mode === "prompt"
+                    className={`flex-1 border-2 transition-all duration-300 ${state.mode === "prompt"
                         ? "bg-amber-500 border-amber-400 text-black shadow-md"
                         : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
-                    }`}
+                      }`}
                   >
                     {t("prompt")}
                   </Button>
@@ -698,7 +664,34 @@ export default function DashboardPage() {
             </Card>
           </motion.div>
 
-          
+          {/* Platform Selection */}
+          <motion.div variants={itemVariants}>
+            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
+              <CardContent>
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Download className="w-5 h-5 text-amber-400" />{" "}
+                  {t("platformSelect")}
+                </h2>
+                <div className="grid grid-cols-2 gap-2">
+                  {[{"id": "default", "name": t("Default")}, {"id": "shutterstock", "name": t("Shutterstock")}, {"id": "freepik", "name": t("Freepik")}, {"id": "vecteezy", "name": t("Vecteezy")}, {"id": "adobestock", "name": t("adobeStock")}, // Added AdobeStock
+                  ].map((p) => (
+                    <Button
+                      key={p.id}
+                      onClick={() =>
+                        dispatch({ type: "SET_PLATFORM", payload: p.id })
+                      }
+                      className={`border-2 transition-all duration-300 ${state.platform === p.id
+                          ? "bg-green-500 border-green-400 text-white shadow-md"
+                          : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
+                        }`}
+                    >
+                      {p.name}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
           {/* Sliders */}
           <motion.div variants={itemVariants}>
@@ -848,12 +841,12 @@ export default function DashboardPage() {
           <motion.div variants={itemVariants}>
             <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
               <CardContent className="flex flex-col gap-3 pt-6">
-                <div className="flex gap-3">
-                  {" "}
-                  {/* New flex container */}
+                <div className="flex gap-3"> 
                   <Button
                     onClick={processFiles}
-                    disabled={state.loading || state.files.length === 0}
+                    disabled={
+                      state.loading || state.processedFiles.length === 0
+                    }
                     className="flex-1 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold flex items-center justify-center gap-2 transition-all duration-300 hover:from-amber-600 hover:to-orange-700 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
                   >
                     {state.loading ? (
@@ -865,7 +858,7 @@ export default function DashboardPage() {
                   </Button>
                   <Button
                     onClick={downloadCsv}
-                    disabled={state.fileResults.length === 0}
+                    disabled={results.length === 0}
                     className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold flex items-center justify-center gap-2 transition-all duration-300 hover:from-green-600 hover:to-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
                   >
                     <Download className="w-5 h-5" /> {t("downloadCSV")}
@@ -898,14 +891,14 @@ export default function DashboardPage() {
                       ? t("metadataResults")
                       : t("promptResults")}
                   </h2>
-                  {state.fileResults.length > 0 && (
+                  {results.length > 0 && (
                     <span className="text-sm bg-gray-800 px-3 py-1 rounded-full">
-                      {state.fileResults.length}{" "}
-                      {t("result", { count: state.fileResults.length })}
+                      {results.length} 
+                      {t("result", { count: results.length })}
                     </span>
                   )}
                 </div>
-                {state.fileResults.length === 0 ? (
+                {results.length === 0 ? (
                   <div className="text-center py-16 text-gray-500 flex flex-col items-center justify-center h-full">
                     <FileImage className="w-20 h-20 mx-auto mb-6 opacity-30" />
                     <p className="text-lg font-semibold">
@@ -920,18 +913,23 @@ export default function DashboardPage() {
                     animate="visible"
                     className="grid grid-cols-1 gap-4 max-h-[600px] overflow-y-auto pr-2 -mr-2"
                   >
-                    {state.fileResults.map((f, idx) => (
-                      <motion.div key={f.file + idx} variants={itemVariants}>
-                        <ResultCard
-                          mode={state.mode}
-                          fileData={f}
-                          preview={{ url: f.previewUrl }}
-                          index={idx}
-                          onRemove={removeResult}
-                          platform={state.platform}
-                        />
-                      </motion.div>
-                    ))}
+                    {state.processedFiles.map((f, idx) =>
+                      f.result ? (
+                        <motion.div
+                          key={f.originalFile.name + idx}
+                          variants={itemVariants}
+                        >
+                          <ResultCard
+                            mode={state.mode}
+                            fileData={f.result}
+                            preview={{ url: f.previewUrl }}
+                            index={idx}
+                            onRemove={removeFile}
+                            platform={state.platform}
+                          />
+                        </motion.div>
+                      ) : null
+                    )}
                   </motion.div>
                 )}
               </CardContent>
@@ -946,34 +944,32 @@ export default function DashboardPage() {
               <h2 className="text-lg font-semibold mb-2">
                 {t("selectedImages")}
               </h2>
-              {state.previews.length === 0 ? (
+              {state.processedFiles.length === 0 ? (
                 <div className="flex items-center justify-center h-40 text-gray-500 text-sm border border-dashed border-gray-700 rounded-lg">
                   {t("noImagesSelected")}
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-1 gap-4">
-                  {state.previews.map((p, idx) => {
-                    const fileStatus = state.fileResults.find(
-                      (r) => r.file === p.name
-                    );
+                  {state.processedFiles.map((p, idx) => {
+                    const fileStatus = p.result;
                     const isProcessing = fileStatus && fileStatus.ok === null;
                     const isProcessed = fileStatus && fileStatus.ok === true;
                     const hasFailed = fileStatus && fileStatus.ok === false;
 
                     return (
                       <motion.div
-                        key={p.name + idx}
+                        key={p.originalFile.name + idx}
                         variants={itemVariants}
                         className="relative group border border-gray-700 rounded-lg overflow-hidden shadow-md"
                       >
                         <div className="flex items-center justify-center bg-gray-800 h-32 relative">
                           {/* Image */}
                           <Image
-                            src={p.url}
-                            alt={p.name}
+                            src={p.previewUrl}
+                            alt={p.originalFile.name}
                             width={120}
                             height={120}
-                            className={`object-contain max-h-28 transition-all duration-300 ${
+                            className={`object-contain max-h-28 transition-all duration-300 ${ 
                               isProcessing || isProcessed ? "opacity-50" : ""
                             }`}
                           />
@@ -1007,7 +1003,7 @@ export default function DashboardPage() {
                           <Trash2 className="w-4 h-4" />
                         </button>
                         <p className="text-xs text-center truncate p-1 bg-gray-800">
-                          {p.name}
+                          {p.originalFile.name}
                         </p>
                       </motion.div>
                     );

@@ -5,7 +5,7 @@ import { getDb } from "@/lib/mongodb-admin";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// ----------- Helper: Metadata Parser ----------- 
+// ----------- Helper: Metadata Parser -----------
 function parseMetadata(text) {
   const titleMatch = text.match(/Title:\s*(.+)/i);
   const keywordsMatch = text.match(
@@ -38,7 +38,7 @@ function parseMetadata(text) {
   };
 }
 
-// ----------- API Route ----------- 
+// ----------- API Route -----------
 export async function POST(req) {
   try {
     if (!req.headers.get("content-type")?.includes("multipart/form-data")) {
@@ -147,7 +147,7 @@ export async function POST(req) {
         mimeType: mimeType,
         ...meta,
       },
-      prompt: `Image about "${meta.title}" with keywords: ${meta.keywords
+      prompt: `${meta.title}" with keywords: ${meta.keywords
         .slice(0, 3)
         .join(", ")}.`,
       rawResponse: resultText,
