@@ -293,12 +293,11 @@ export default function DashboardPage() {
       };
 
       let compressedFile = file;
-      if (file.type.startsWith("image/")) {
-        try {
-          compressedFile = await imageCompression(file, options);
-        } catch (error) {
-          // Optionally, handle the error or proceed with the original file
-        }
+      if (
+        file.type.startsWith("image/") &&
+        file.type !== "application/postscript"
+      ) {
+        compressedFile = await imageCompression(file, options);
       }
 
       const fd = new FormData();
