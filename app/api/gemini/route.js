@@ -31,26 +31,20 @@ async function convertFile(buffer, file, locale) {
   const fileExtension = file.name?.split(".").pop()?.toLowerCase();
   const mimeType = file.type;
 
-  // Already JPEG → skip
   if (mimeType === "image/jpeg" || ["jpg", "jpeg"].includes(fileExtension)) {
     return { buffer, mimeType: "image/jpeg" };
   }
 
-  // Create temp input and output files
   const tmpInput = tmp.fileSync({ postfix: `.${fileExtension}` });
   const tmpOutput = tmp.fileSync({ postfix: ".jpg" });
   await fs.promises.writeFile(tmpInput.name, buffer);
 
-  const isWin = process.platform === "win32";
   let cmd;
 
   try {
-    // --- EPS handling ---
     if (fileExtension === "eps") {
       cmd = `gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -r300 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`;
-    }
-    // --- ImageMagick for PNG, SVG, BMP, TIFF, WEBP ---
-    else if (
+    } else if (
       ["png", "bmp", "tif", "tiff", "svg", "webp"].includes(fileExtension)
     ) {
       cmd = `magick "${tmpInput.name}" "${tmpOutput.name}"`;
@@ -58,10 +52,7 @@ async function convertFile(buffer, file, locale) {
       throw new Error(t("unsupportedFileType", locale));
     }
 
-    // Run the conversion
     await execAsync(cmd);
-
-    // Read the converted output
     const outputBuffer = await fs.promises.readFile(tmpOutput.name);
     return { buffer: outputBuffer, mimeType: "image/jpeg" };
   } catch (err) {
@@ -72,8 +63,6 @@ async function convertFile(buffer, file, locale) {
     tmpOutput.removeCallback();
   }
 }
-
-
 
 export async function POST(req) {
   try {
@@ -141,6 +130,7 @@ export async function POST(req) {
         finalMimeType,
         ...meta,
       },
+      prompt, // <-- added this so client shows Generated Prompt
       rawResponse: responseText,
       credits: user.credits - 1,
     });

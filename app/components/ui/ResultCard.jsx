@@ -361,7 +361,7 @@ export function ResultCard({
                 <div className="space-y-4">
                   <FieldCard
                     label="Generated Prompt"
-                    value={fileData.prompt.replace(/ with keywords.*$/, "")} // Attempt to remove " with keywords" and anything after it
+                    value={fileData.prompt || "No generated prompt available"} // fallback
                     field="prompt"
                     copiedField={copiedField}
                     copyToClipboard={copyToClipboard}
