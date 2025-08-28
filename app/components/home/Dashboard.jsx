@@ -1,4 +1,6 @@
 "use client";
+import { XCircle } from "lucide-react";
+
 import React, {
   useState,
   useEffect,
@@ -272,8 +274,6 @@ export default function DashboardPage() {
     });
   };
 
-  
-
   const onDrop = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -457,7 +457,7 @@ export default function DashboardPage() {
             const filenameWithoutExt =
               r.file.split(".").slice(0, -1).join(".") || r.file;
             return [
-              `"${filenameWithoutExt}.jpg"`, 
+              `"${filenameWithoutExt}.jpg"`,
               `"${r.meta?.title || ""}"`,
               `"${(r.meta?.keywords || []).join(",")}"`,
             ];
@@ -513,17 +513,17 @@ export default function DashboardPage() {
             return [
               `"${r.file}"`,
               `"${r.meta?.title || ""}"`,
-              `"${ 
-              Array.isArray(r.meta?.keywords)
-                ? r.meta.keywords.join("|")
-                : r.meta?.keywords || ""
-            }"`,
+              `"${
+                Array.isArray(r.meta?.keywords)
+                  ? r.meta.keywords.join("|")
+                  : r.meta?.keywords || ""
+              }"`,
               `"${r.meta?.description || ""}"`,
               `"${
-              Array.isArray(r.meta?.category)
-                ? r.meta.category.join("|")
-                : r.meta?.category || ""
-            }"`,
+                Array.isArray(r.meta?.category)
+                  ? r.meta.category.join("|")
+                  : r.meta?.category || ""
+              }"`,
               `"${r.engine || ""}"`,
               `"${r.ok ? "ok" : "error"}"`,
             ];
@@ -641,10 +641,11 @@ export default function DashboardPage() {
                     onClick={() =>
                       dispatch({ type: "SET_MODE", payload: "meta" })
                     }
-                    className={`flex-1 border-2 transition-all duration-300 ${state.mode === "meta"
+                    className={`flex-1 border-2 transition-all duration-300 ${
+                      state.mode === "meta"
                         ? "bg-blue-500 border-blue-400 text-white shadow-md"
                         : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
-                      }`}
+                    }`}
                   >
                     {t("metadata")}
                   </Button>
@@ -652,10 +653,11 @@ export default function DashboardPage() {
                     onClick={() =>
                       dispatch({ type: "SET_MODE", payload: "prompt" })
                     }
-                    className={`flex-1 border-2 transition-all duration-300 ${state.mode === "prompt"
+                    className={`flex-1 border-2 transition-all duration-300 ${
+                      state.mode === "prompt"
                         ? "bg-amber-500 border-amber-400 text-black shadow-md"
                         : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
-                      }`}
+                    }`}
                   >
                     {t("prompt")}
                   </Button>
@@ -673,17 +675,23 @@ export default function DashboardPage() {
                   {t("platformSelect")}
                 </h2>
                 <div className="grid grid-cols-2 gap-2">
-                  {[{"id": "default", "name": t("Default")}, {"id": "shutterstock", "name": t("Shutterstock")}, {"id": "freepik", "name": t("Freepik")}, {"id": "vecteezy", "name": t("Vecteezy")}, {"id": "adobestock", "name": t("adobeStock")}, // Added AdobeStock
+                  {[
+                    { id: "default", name: t("Default") },
+                    { id: "shutterstock", name: t("Shutterstock") },
+                    { id: "freepik", name: t("Freepik") },
+                    { id: "vecteezy", name: t("Vecteezy") },
+                    { id: "adobestock", name: t("adobeStock") }, // Added AdobeStock
                   ].map((p) => (
                     <Button
                       key={p.id}
                       onClick={() =>
                         dispatch({ type: "SET_PLATFORM", payload: p.id })
                       }
-                      className={`border-2 transition-all duration-300 ${state.platform === p.id
+                      className={`border-2 transition-all duration-300 ${
+                        state.platform === p.id
                           ? "bg-green-500 border-green-400 text-white shadow-md"
                           : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
-                        }`}
+                      }`}
                     >
                       {p.name}
                     </Button>
@@ -834,7 +842,9 @@ export default function DashboardPage() {
                     {t("dragAndDrop")}
                   </p>
                   <p className="text-gray-500">{t("orClickToSelect")}</p>
-                  <p className="text-xs text-gray-600 mt-2">{t("supportedFormats")}</p>
+                  <p className="text-xs text-gray-600 mt-2">
+                    {t("supportedFormats")}
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -842,7 +852,7 @@ export default function DashboardPage() {
           <motion.div variants={itemVariants}>
             <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
               <CardContent className="flex flex-col gap-3 pt-6">
-                <div className="flex gap-3"> 
+                <div className="flex gap-3">
                   <Button
                     onClick={processFiles}
                     disabled={
@@ -894,7 +904,7 @@ export default function DashboardPage() {
                   </h2>
                   {results.length > 0 && (
                     <span className="text-sm bg-gray-800 px-3 py-1 rounded-full">
-                      {results.length} 
+                      {results.length}
                       {t("result", { count: results.length })}
                     </span>
                   )}
@@ -970,7 +980,7 @@ export default function DashboardPage() {
                             alt={p.originalFile.name}
                             width={120}
                             height={120}
-                            className={`object-contain max-h-28 transition-all duration-300 ${ 
+                            className={`object-contain max-h-28 transition-all duration-300 ${
                               isProcessing || isProcessed ? "opacity-50" : ""
                             }`}
                           />

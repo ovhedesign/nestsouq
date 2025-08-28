@@ -1,33 +1,86 @@
 import { NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
-// import sharp from "sharp"; // Removed
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getDb } from "@/lib/mongodb-admin";
+import fs from "fs";
+import { exec } from "child_process";
+import tmp from "tmp";
+import { promisify } from "util";
+
+const execAsync = promisify(exec);
+
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const translations = {
   en: {
-    svgEpsNotSupported: "SVG/EPS image processing is not supported.",
+    fileConversionFailed: "Image processing failed for the uploaded file.",
+    unsupportedFileType: "Unsupported file type.",
   },
   ar: {
-    svgEpsNotSupported: "معالجة صور SVG/EPS غير مدعومة.",
+    fileConversionFailed: "فشل معالجة الصورة المرفوعة.",
+    unsupportedFileType: "نوع الملف غير مدعوم.",
   },
 };
 
 const t = (key, loc) => {
-    const lang = translations[loc] ? loc : 'en';
-    return translations[lang][key];
+  const lang = translations[loc] ? loc : "en";
+  return translations[lang][key];
+};
+
+async function convertFile(buffer, file, locale) {
+  const fileExtension = file.name?.split(".").pop()?.toLowerCase();
+  const mimeType = file.type;
+
+  // Already JPG → skip
+  if (mimeType === "image/jpeg" || ["jpg", "jpeg"].includes(fileExtension)) {
+    return { buffer, mimeType: "image/jpeg" };
+  }
+
+  // Temp input file
+  const tmpInput = tmp.fileSync({ postfix: `.${fileExtension}` });
+  await fs.promises.writeFile(tmpInput.name, buffer);
+
+  // Temp output always JPG
+  const tmpOutput = tmp.fileSync({ postfix: ".jpg" });
+  let cmd;
+
+  const isWin = process.platform === "win32";
+
+  try {
+    if (
+      fileExtension === "svg" ||
+      ["png", "bmp", "tif", "tiff"].includes(fileExtension)
+    ) {
+      cmd = isWin
+        ? `magick convert "${tmpInput.name}" "${tmpOutput.name}"`
+        : `magick "${tmpInput.name}" "${tmpOutput.name}"`;
+    } else if (fileExtension === "eps") {
+      cmd = isWin
+        ? `gswin64c -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -r300 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`
+        : `gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -r300 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`;
+    } else {
+      throw new Error(t("unsupportedFileType", locale));
+    }
+
+    await execAsync(cmd);
+
+    const outputBuffer = await fs.promises.readFile(tmpOutput.name);
+    return { buffer: outputBuffer, mimeType: "image/jpeg" };
+  } catch (err) {
+    console.error("Conversion failed:", err);
+    throw new Error(t("fileConversionFailed", locale));
+  } finally {
+    tmpInput.removeCallback();
+    tmpOutput.removeCallback();
+  }
 }
 
-// ----------- Helper: Metadata Parser ----------- 
 function parseMetadata(text) {
   const titleMatch = text.match(/Title:\s*(.+)/i);
   const keywordsMatch = text.match(
-    /Keywords:\s*([\s\S]+?)\n(?:Description:|Category:)/i
+    /Keywords:\s*([\s\S]+?)\n(?:Description:|Category:)/
   );
-  const descMatch = text.match(
-    /Description:\s*([\s\S]+?)(?:\nCategory:|\n?$)/i
-  );
+  const descMatch = text.match(/Description:\s*([\s\S]+?)(?:\nCategory:|\n?$)/);
   const categoryMatch = text.match(/Category:\s*([\s\S]+)/i);
 
   const keywords = keywordsMatch
@@ -36,7 +89,6 @@ function parseMetadata(text) {
         .map((k) => k.trim())
         .filter(Boolean)
     : [];
-
   const categories = categoryMatch
     ? categoryMatch[1]
         .split(/,|\n|•|-/)
@@ -52,7 +104,6 @@ function parseMetadata(text) {
   };
 }
 
-// ----------- API Route ----------- 
 export async function POST(req) {
   try {
     if (!req.headers.get("content-type")?.includes("multipart/form-data")) {
@@ -65,16 +116,8 @@ export async function POST(req) {
     const formData = await req.formData();
     const file = formData.get("file");
     const uid = formData.get("uid");
-    const locale = formData.get("locale") || "en"; // Default to English
-
-    // Convert formData fields safely
+    const locale = formData.get("locale") || "en";
     const mode = formData.get("mode") || "meta";
-    const minTitle = Number(formData.get("minTitle")) || 6;
-    const maxTitle = Number(formData.get("maxTitle")) || 18;
-    const minKeywords = Number(formData.get("minKeywords")) || 43;
-    const maxKeywords = Number(formData.get("maxKeywords")) || 48;
-    const minDesc = Number(formData.get("minDesc")) || 12;
-    const maxDesc = Number(formData.get("maxDesc")) || 30;
 
     if (!file || typeof file.arrayBuffer !== "function") {
       return NextResponse.json(
@@ -82,95 +125,65 @@ export async function POST(req) {
         { status: 400 }
       );
     }
-
     if (!uid) {
-      return NextResponse.json({ error: "UID is required" }, { status: 400 });
+      return NextResponse.json({ error: "UID is required" }, { status: 403 });
     }
 
-    // ---- Convert uploaded file ----
-    const arrayBuffer = await file.arrayBuffer();
-    let buffer = Buffer.from(arrayBuffer);
-    let mimeType = file.type || "image/jpeg";
+    const initialBuffer = Buffer.from(await file.arrayBuffer());
+    const { buffer: convertedBuffer, mimeType: finalMimeType } =
+      await convertFile(initialBuffer, file, locale);
 
-    // Explicitly disallow SVG/EPS if sharp is removed
-    if (
-      mimeType === "image/svg+xml" ||
-      file.name?.toLowerCase().endsWith(".svg") ||
-      mimeType === "application/postscript" || // Assuming this is for EPS
-      file.name?.toLowerCase().endsWith(".eps")
-    ) {
-      return NextResponse.json(
-        { error: t("svgEpsNotSupported", locale) },
-        { status: 400 }
-      );
-    }
+    const base64Image = convertedBuffer.toString("base64");
 
-    const base64Image = buffer.toString("base64");
-
-    // ---- Initialize Gemini ----
-    const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
     const languageInstruction = locale === "ar" ? "in Arabic" : "in English";
+    const prompt = `Analyze this ${finalMimeType} image and generate comprehensive metadata for ${mode} mode ${languageInstruction}.
 
-    const contents = [
-      {
-        inlineData: {
-          mimeType: mimeType,
-          data: base64Image,
-        },
-      },
-      {
-        text: `Analyze this ${mimeType} image and generate comprehensive metadata for ${mode} mode ${languageInstruction}.\n        \nRespond EXACTLY in this format:\nTitle: <title>\nKeywords: <comma-separated keywords>\nDescription: <description>\nCategory: <comma-separated categories>\n\nRequirements:\n- Title: ${minTitle}-${maxTitle} words\n- Keywords: ${minKeywords}-${maxKeywords} items\n- Description: ${minDesc}-${maxDesc} words\n- Be accurate and descriptive`,
-      },
-    ];
+Respond EXACTLY in this format:
+Title: <title>
+Keywords: <comma-separated keywords>
+Description: <description>
+Category: <comma-separated categories>
+`;
 
-    // ---- Call Gemini ----
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
-      contents: contents,
-    });
+    const result = await model.generateContent([
+      prompt,
+      { inlineData: { data: base64Image, mimeType: finalMimeType } },
+    ]);
 
-    const resultText = response.text || "No response text";
-    const meta = parseMetadata(resultText);
+    const responseText = result.response.text();
+    const meta = parseMetadata(responseText);
 
-    // ---- Deduct Credit ----
     const db = await getDb("nestsouq");
     const usersCollection = db.collection("user_data");
-    const user = await usersCollection.findOne({ uid: uid });
+    const user = await usersCollection.findOne({ uid });
 
-    if (!user) {
+    if (!user)
       return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
-
-    if (user.credits < 1) {
+    if (user.credits < 1)
       return NextResponse.json(
         { error: "Insufficient credits" },
         { status: 403 }
       );
-    }
 
     const newCredits = user.credits - 1;
-    await usersCollection.updateOne(
-      { uid: uid },
-      { $set: { credits: newCredits } }
-    );
+    await usersCollection.updateOne({ uid }, { $set: { credits: newCredits } });
 
     return NextResponse.json({
       metadata: {
         filename: file.name || "uploaded_file",
-        mimeType: mimeType,
+        finalMimeType,
         ...meta,
       },
-      prompt: `${meta.title}" with keywords: ${meta.keywords
-        .slice(0, 3)
-        .join(", ")}.`,
-      rawResponse: resultText,
+      rawResponse: responseText,
       credits: newCredits,
     });
   } catch (error) {
     console.error("Error processing files:", error);
     return NextResponse.json(
-      { error: "Failed to process file", details: error.message },
+      { error: t("fileConversionFailed", "en"), details: error.message },
       { status: 500 }
     );
   }
