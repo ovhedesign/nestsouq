@@ -834,7 +834,7 @@ export default function DashboardPage() {
                     {t("dragAndDrop")}
                   </p>
                   <p className="text-gray-500">{t("orClickToSelect")}</p>
-                  <p className="text-xs text-gray-600 mt-2">Supported formats: JPG, PNG, GIF, BMP, TIFF, SVG</p>
+                  <p className="text-xs text-gray-600 mt-2">{t("supportedFormats")}</p>
                 </div>
               </CardContent>
             </Card>

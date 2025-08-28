@@ -20,7 +20,7 @@
     "uploadYourFiles": "Upload Your Files",
     "dragAndDrop": "Drag & drop files here",
     "orClickToSelect": "or click to select",
-    "supportedFormats": "Supported formats: JPG, PNG, GIF, BMP, TIFF, SVG",
+    "supportedFormats": "Supported formats: JPG, PNG, GIF, BMP, TIFF, SVG, WebP",
     "metadataResults": "Metadata Results",
     "promptResults": "Prompt Results",
     "result": "result",
@@ -106,5 +106,12 @@
   "LanguageSwitcher": {
     "english": "English",
     "arabic": "Arabic"
+  },
+  "ImageAnalyzer": {
+    "title": "Image Analyzer",
+    "uploadLabel": "Upload a WebP Image",
+    "analyzeButton": "Analyze",
+    "analyzing": "Analyzing...",
+    "resultsTitle": "Analysis Results"
   }
 }
