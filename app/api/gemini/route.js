@@ -5,7 +5,6 @@ import fs from "fs";
 import { exec } from "child_process";
 import tmp from "tmp";
 import { promisify } from "util";
-
 const execAsync = promisify(exec);
 
 export const runtime = "nodejs";
@@ -31,39 +30,37 @@ async function convertFile(buffer, file, locale) {
   const fileExtension = file.name?.split(".").pop()?.toLowerCase();
   const mimeType = file.type;
 
-  // Already JPG → skip
+  // Already JPEG → skip
   if (mimeType === "image/jpeg" || ["jpg", "jpeg"].includes(fileExtension)) {
     return { buffer, mimeType: "image/jpeg" };
   }
 
-  // Temp input file
+  // Create temp input and output files
   const tmpInput = tmp.fileSync({ postfix: `.${fileExtension}` });
+  const tmpOutput = tmp.fileSync({ postfix: ".jpg" });
   await fs.promises.writeFile(tmpInput.name, buffer);
 
-  // Temp output always JPG
-  const tmpOutput = tmp.fileSync({ postfix: ".jpg" });
+  const isWin = process.platform === "win32";
   let cmd;
 
-  const isWin = process.platform === "win32";
-
   try {
-    if (
-      fileExtension === "svg" ||
-      ["png", "bmp", "tif", "tiff"].includes(fileExtension)
+    // --- EPS handling ---
+    if (fileExtension === "eps") {
+      cmd = `gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -r300 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`;
+    }
+    // --- ImageMagick for PNG, SVG, BMP, TIFF, WEBP ---
+    else if (
+      ["png", "bmp", "tif", "tiff", "svg", "webp"].includes(fileExtension)
     ) {
-      cmd = isWin
-        ? `magick convert "${tmpInput.name}" "${tmpOutput.name}"`
-        : `magick "${tmpInput.name}" "${tmpOutput.name}"`;
-    } else if (fileExtension === "eps") {
-      cmd = isWin
-        ? `gswin64c -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -r300 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`
-        : `gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -r300 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`;
+      cmd = `magick "${tmpInput.name}" "${tmpOutput.name}"`;
     } else {
       throw new Error(t("unsupportedFileType", locale));
     }
 
+    // Run the conversion
     await execAsync(cmd);
 
+    // Read the converted output
     const outputBuffer = await fs.promises.readFile(tmpOutput.name);
     return { buffer: outputBuffer, mimeType: "image/jpeg" };
   } catch (err) {
@@ -125,9 +122,8 @@ export async function POST(req) {
         { status: 400 }
       );
     }
-    if (!uid) {
+    if (!uid)
       return NextResponse.json({ error: "UID is required" }, { status: 403 });
-    }
 
     const initialBuffer = Buffer.from(await file.arrayBuffer());
     const { buffer: convertedBuffer, mimeType: finalMimeType } =
@@ -137,16 +133,9 @@ export async function POST(req) {
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
     const languageInstruction = locale === "ar" ? "in Arabic" : "in English";
-    const prompt = `Analyze this ${finalMimeType} image and generate comprehensive metadata for ${mode} mode ${languageInstruction}.
 
-Respond EXACTLY in this format:
-Title: <title>
-Keywords: <comma-separated keywords>
-Description: <description>
-Category: <comma-separated categories>
-`;
+    const prompt = `Analyze this ${finalMimeType} image and generate comprehensive metadata for ${mode} mode ${languageInstruction}. Respond EXACTLY in this format: Title: <title> Keywords: <comma-separated keywords> Description: <description> Category: <comma-separated categories>`;
 
     const result = await model.generateContent([
       prompt,
@@ -159,7 +148,6 @@ Category: <comma-separated categories>
     const db = await getDb("nestsouq");
     const usersCollection = db.collection("user_data");
     const user = await usersCollection.findOne({ uid });
-
     if (!user)
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     if (user.credits < 1)
@@ -168,8 +156,10 @@ Category: <comma-separated categories>
         { status: 403 }
       );
 
-    const newCredits = user.credits - 1;
-    await usersCollection.updateOne({ uid }, { $set: { credits: newCredits } });
+    await usersCollection.updateOne(
+      { uid },
+      { $set: { credits: user.credits - 1 } }
+    );
 
     return NextResponse.json({
       metadata: {
@@ -178,7 +168,7 @@ Category: <comma-separated categories>
         ...meta,
       },
       rawResponse: responseText,
-      credits: newCredits,
+      credits: user.credits - 1,
     });
   } catch (error) {
     console.error("Error processing files:", error);
