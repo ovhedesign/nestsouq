@@ -130,7 +130,7 @@ export async function POST(req) {
         finalMimeType,
         ...meta,
       },
-      prompt, // <-- added this so client shows Generated Prompt
+      prompt: responseText || "No generated prompt available", // <-- use Gemini output
       rawResponse: responseText,
       credits: user.credits - 1,
     });
