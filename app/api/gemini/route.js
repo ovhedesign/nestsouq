@@ -158,7 +158,7 @@ Requirements:
 - Description: ${minDesc}-${maxDesc} words
 - Category: 1-3 relevant categories
 - Be factual, concise, and descriptive`
-        : `Analyze this ${finalMimeType} image and generate 10 diverse, creative, and engaging prompts for social media posts ${languageInstruction}. The prompts should be suitable for platforms like Instagram, Facebook, and Twitter. Ensure the prompts are of high quality and tailored to the image's content.`;
+        : `Analyze this image in detail. Describe objects, style, mood, and key attributes ${languageInstruction}.`;
 
     const result = await model.generateContent([
       { inlineData: { data: base64Image, mimeType: finalMimeType } },

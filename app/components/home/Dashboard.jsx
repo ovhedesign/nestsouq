@@ -142,25 +142,6 @@ function UserDropdown({ user, userData }) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const t = useTranslations("HomePage");
-  const createPreview = async (file) => {
-    let previewFile = file;
-
-    // For browser-supported conversion: TIFF/BMP
-    if (file.type === "image/tiff" || file.type === "image/bmp") {
-      try {
-        previewFile = await imageCompression(file, {
-          maxSizeMB: 0.06, // ~60KB
-          maxWidthOrHeight: 200,
-          useWebWorker: true,
-          initialQuality: 0.7,
-        });
-      } catch (err) {
-        console.error("Compression failed:", err);
-      }
-    }
-
-    return URL.createObjectURL(previewFile);
-  };
 
   if (!user || !userData) return null;
 
@@ -264,6 +245,26 @@ export default function DashboardPage() {
   const currentLocale = pathname.split("/")[1];
   const inputRef = useRef(null);
   const t = useTranslations("HomePage");
+
+  const createPreview = async (file) => {
+    let previewFile = file;
+
+    // For browser-supported conversion: TIFF/BMP
+    if (file.type === "image/tiff" || file.type === "image/bmp") {
+      try {
+        previewFile = await imageCompression(file, {
+          maxSizeMB: 0.06, // ~60KB
+          maxWidthOrHeight: 200,
+          useWebWorker: true,
+          initialQuality: 0.7,
+        });
+      } catch (err) {
+        console.error("Compression failed:", err);
+      }
+    }
+
+    return URL.createObjectURL(previewFile);
+  };
 
   const handleSelected = async (list) => {
     const arr = Array.from(list || []);
