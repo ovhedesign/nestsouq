@@ -1,5 +1,6 @@
 import { NextIntlClientProvider } from "next-intl";
 import localFont from "next/font/local";
+import Script from "next/script"; // Import the Script component
 import i18nConfig from "../../i18n.js";
 import "../globals.css";
 
@@ -20,6 +21,18 @@ export default async function RootLayout({ children, params: { locale } }) {
   return (
     <html lang={locale || "en"}>
       <head>
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-Q1J3L66B0V"
+        ></Script>
+        <Script id="google-analytics">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'G-Q1J3L66B0V');
+          `}
+        </Script>
         <title>{siteTitle}</title>
         <meta name="description" content={siteDescription} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
