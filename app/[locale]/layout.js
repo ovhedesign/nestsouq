@@ -1,8 +1,8 @@
 import { NextIntlClientProvider } from "next-intl";
 import localFont from "next/font/local";
-import Script from "next/script"; // Import the Script component
 import i18nConfig from "../../i18n.js";
 import "../globals.css";
+import socialImage from "./social-image.png"; // import the image
 
 const almarai = localFont({
   src: "../fonts/Almarai.ttf",
@@ -15,40 +15,25 @@ export default async function RootLayout({ children, params: { locale } }) {
   const siteTitle = "NestSouq – AI Powered Image to Prompt & Metadata";
   const siteDescription =
     "NestSouq helps Middle East creators transform images into AI prompts and metadata instantly.";
-  const siteUrl = "https://nestsouq.com"; // Replace with your real domain
-  const socialImage = `${siteUrl}/${locale}/social-image.png`;
+  const siteUrl = "https://nestsouq.app";
 
   return (
     <html lang={locale || "en"}>
       <head>
-        <Script
-          async
-          src="https://www.googletagmanager.com/gtag/js?id=G-Q1J3L66B0V"
-        ></Script>
-        <Script id="google-analytics">
-          {`
-            window.dataLayer = window.dataLayer || [];
-            function gtag(){dataLayer.push(arguments);}
-            gtag('js', new Date());
-            gtag('config', 'G-Q1J3L66B0V');
-          `}
-        </Script>
         <title>{siteTitle}</title>
         <meta name="description" content={siteDescription} />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta property="og:type" content="website" />
         <meta property="og:title" content={siteTitle} />
-        <meta
-          name="developer-website"
-          content="https://dev-sahariarsupto.vercel.app"
-        ></meta>
         <meta property="og:description" content={siteDescription} />
         <meta property="og:url" content={siteUrl} />
-        <meta property="og:image" content={socialImage} />
+        <meta property="og:image" content={socialImage.src} />{" "}
+        {/* use imported image */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={siteTitle} />
         <meta name="twitter:description" content={siteDescription} />
-        <meta name="twitter:image" content={socialImage} />
+        <meta name="twitter:image" content={socialImage.src} />{" "}
+        {/* use imported image */}
         <meta name="geo.region" content="AE" />
         <meta name="geo.placename" content="Dubai" />
         <meta name="geo.position" content="25.276987;55.296249" />
