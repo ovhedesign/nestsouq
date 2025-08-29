@@ -142,6 +142,25 @@ function UserDropdown({ user, userData }) {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   const t = useTranslations("HomePage");
+  const createPreview = async (file) => {
+    let previewFile = file;
+
+    // For browser-supported conversion: TIFF/BMP
+    if (file.type === "image/tiff" || file.type === "image/bmp") {
+      try {
+        previewFile = await imageCompression(file, {
+          maxSizeMB: 0.06, // ~60KB
+          maxWidthOrHeight: 200,
+          useWebWorker: true,
+          initialQuality: 0.7,
+        });
+      } catch (err) {
+        console.error("Compression failed:", err);
+      }
+    }
+
+    return URL.createObjectURL(previewFile);
+  };
 
   if (!user || !userData) return null;
 
@@ -246,7 +265,7 @@ export default function DashboardPage() {
   const inputRef = useRef(null);
   const t = useTranslations("HomePage");
 
-  const handleSelected = (list) => {
+  const handleSelected = async (list) => {
     const arr = Array.from(list || []);
     if (arr.length === 0) return;
 
@@ -263,15 +282,15 @@ export default function DashboardPage() {
 
     if (accepted.length === 0) return;
 
-    const newProcessedFiles = accepted.map((f) => ({
-      originalFile: f,
-      previewUrl: URL.createObjectURL(f),
-      result: null, // Will be populated after Gemini call
-    }));
-    dispatch({
-      type: "ADD_FILES",
-      payload: newProcessedFiles,
-    });
+    const newProcessedFiles = await Promise.all(
+      accepted.map(async (f) => ({
+        originalFile: f,
+        previewUrl: await createPreview(f), // <- convert/compress for preview
+        result: null,
+      }))
+    );
+
+    dispatch({ type: "ADD_FILES", payload: newProcessedFiles });
   };
 
   const onDrop = (e) => {
