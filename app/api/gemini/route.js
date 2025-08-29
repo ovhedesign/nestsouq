@@ -98,7 +98,10 @@ export async function POST(req) {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     const languageInstruction = locale === "ar" ? "in Arabic" : "in English";
 
-    const prompt = `Analyze this ${finalMimeType} image and generate comprehensive metadata for ${mode} mode ${languageInstruction}. Respond EXACTLY in this format: Title: <title> Keywords: <comma-separated keywords> Description: <description> Category: <comma-separated categories>`;
+    const prompt =
+      mode === "meta"
+        ? `Analyze this ${finalMimeType} image and generate comprehensive metadata for ${mode} mode ${languageInstruction}. Respond EXACTLY in this format: Title: <title> Keywords: <comma-separated keywords> Description: <description> Category: <comma-separated categories>`
+        : `Analyze this ${finalMimeType} image and generate 10 diverse, creative, and engaging prompts for social media posts ${languageInstruction}. The prompts should be suitable for platforms like Instagram, Facebook, and Twitter. Ensure the prompts are of high quality and tailored to the image's content.`;
 
     const result = await model.generateContent([
       prompt,
