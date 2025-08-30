@@ -81,7 +81,7 @@ async function convertFile(buffer, file, locale) {
         fileExtension
       )
     ) {
-      cmd = `magick "${tmpInput.name}" "${tmpOutput.name}"`;
+      cmd = `magick "${tmpInput.name}" "JPEG:${tmpOutput.name}"`;
     } else {
       throw new Error(t("unsupportedFileType", locale));
     }
