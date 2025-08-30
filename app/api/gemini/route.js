@@ -77,7 +77,7 @@ async function convertFile(buffer, file, locale) {
     if (fileExtension === "eps") {
       cmd = `gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -r300 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`;
     } else if (
-      ["png", "bmp", "tif", "tiff", "svg", "webp"].includes(fileExtension)
+      ["png", "bmp", "tif", "tiff", "svg", "webp", "gif"].includes(fileExtension)
     ) {
       cmd = `magick "${tmpInput.name}" "${tmpOutput.name}"`;
     } else {

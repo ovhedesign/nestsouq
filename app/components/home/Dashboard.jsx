@@ -315,6 +315,7 @@ export default function DashboardPage() {
       let compressedFile = file;
       if (
         file.type.startsWith("image/") &&
+        file.type !== "image/gif" &&
         file.type !== "application/postscript"
       ) {
         compressedFile = await imageCompression(file, options);
