@@ -77,7 +77,9 @@ async function convertFile(buffer, file, locale) {
     if (fileExtension === "eps") {
       cmd = `gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -r300 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`;
     } else if (
-      ["png", "bmp", "tif", "tiff", "svg", "webp", "gif"].includes(fileExtension)
+      ["png", "bmp", "tif", "tiff", "svg", "webp", "gif"].includes(
+        fileExtension
+      )
     ) {
       cmd = `magick "${tmpInput.name}" "${tmpOutput.name}"`;
     } else {
@@ -158,7 +160,7 @@ Strictly follow these requirements:
 - Description: MUST be between ${minDesc} and ${maxDesc} words.
 - Category: MUST be between 1 and 3 relevant categories.
 - Be factual, concise, and descriptive.`
-        : `Analyze this ${finalMimeType} image and generate 10 diverse, creative, and engaging prompts for social media posts ${languageInstruction}. The prompts should be suitable for platforms like Instagram, Facebook, and Twitter. Ensure the prompts are of high quality and tailored to the image's content.`;
+        : `Analyze this ${finalMimeType} image in detail. Describe objects, style, mood, and key attributes${languageInstruction}.`;
 
     const result = await model.generateContent([
       { inlineData: { data: base64Image, mimeType: finalMimeType } },
