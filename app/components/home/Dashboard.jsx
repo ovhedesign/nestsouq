@@ -244,6 +244,7 @@ export default function DashboardPage() {
   const pathname = usePathname();
   const currentLocale = pathname.split("/")[1];
   const inputRef = useRef(null);
+  const resultsContainerRef = useRef(null);
   const t = useTranslations("HomePage");
 
   const createPreview = async (file) => {
