@@ -247,10 +247,15 @@ export default function DashboardPage() {
   const t = useTranslations("HomePage");
 
   const createPreview = async (file) => {
+    const fileExtension = file.name?.split(".").pop()?.toLowerCase();
+    if (file.type === "image/tiff" || fileExtension === "eps") {
+      return "unsupported";
+    }
+
     let previewFile = file;
 
-    // For browser-supported conversion: TIFF/BMP
-    if (file.type === "image/tiff" || file.type === "image/bmp") {
+    // For browser-supported conversion: BMP
+    if (file.type === "image/bmp") {
       try {
         previewFile = await imageCompression(file, {
           maxSizeMB: 0.06, // ~60KB
@@ -390,10 +395,20 @@ export default function DashboardPage() {
       return;
     }
 
-    if (
-      state.processedFiles.length === 0 ||
-      userData.credits < state.processedFiles.length
-    ) {
+    const filesToProcess = state.processedFiles.filter((f) => !f.result);
+
+    if (filesToProcess.length === 0) {
+      dispatch({
+        type: "SET_ERROR_MSG",
+        payload: t("noFilesToProcess"),
+      });
+      setTimeout(() => {
+        dispatch({ type: "SET_ERROR_MSG", payload: "" });
+      }, 3000);
+      return;
+    }
+
+    if (userData.credits < filesToProcess.length) {
       dispatch({
         type: "SET_ERROR_MSG",
         payload: t("notEnoughCredits"),
@@ -407,13 +422,13 @@ export default function DashboardPage() {
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    // Set initial processing state for all files
-    for (let i = 0; i < state.processedFiles.length; i++) {
-      const file = state.processedFiles[i];
+    // Set initial processing state for all files to be processed
+    for (const file of filesToProcess) {
+      const index = state.processedFiles.indexOf(file);
       dispatch({
         type: "UPDATE_FILE_RESULT",
         payload: {
-          index: i,
+          index,
           result: {
             file: file.originalFile.name,
             ok: null,
@@ -425,12 +440,12 @@ export default function DashboardPage() {
       });
     }
 
-    for (let i = 0; i < state.processedFiles.length; i++) {
-      const file = state.processedFiles[i];
+    for (const file of filesToProcess) {
+      const index = state.processedFiles.indexOf(file);
       const result = await callGemini(file.originalFile, file.previewUrl);
       dispatch({
         type: "UPDATE_FILE_RESULT",
-        payload: { index: i, result: result },
+        payload: { index, result },
       });
     }
     dispatch({ type: "SET_LOADING", payload: false });
@@ -997,15 +1012,21 @@ export default function DashboardPage() {
                       >
                         <div className="flex items-center justify-center bg-gray-800 h-32 relative">
                           {/* Image */}
-                          <Image
-                            src={p.previewUrl}
-                            alt={p.originalFile.name}
-                            width={120}
-                            height={120}
-                            className={`object-contain max-h-28 transition-all duration-300 ${
-                              isProcessing || isProcessed ? "opacity-50" : ""
-                            }`}
-                          />
+                          {p.previewUrl === "unsupported" ? (
+                            <div className="w-full h-32 flex items-center justify-center bg-gray-800">
+                              <FileImage className="w-12 h-12 text-gray-500" />
+                            </div>
+                          ) : (
+                            <Image
+                              src={p.previewUrl}
+                              alt={p.originalFile.name}
+                              width={120}
+                              height={120}
+                              className={`object-contain max-h-28 transition-all duration-300 ${
+                                isProcessing || isProcessed ? "opacity-50" : ""
+                              }`}
+                            />
+                          )}
 
                           {/* Status Overlay */}
                           {isProcessing && (

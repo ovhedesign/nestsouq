@@ -268,20 +268,17 @@ export function ResultCard({
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
+            {preview && (
+              <div className=" flex justify-center items-start">
+                <img
+                  src={typeof preview === "string" ? preview : preview.url}
+                  alt={fileData.file || "preview"}
+                  className="max-h-48 w-full object-contain rounded-xl border border-gray-700 shadow-lg"
+                />
+              </div>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
               {/* Image Preview */}
-              {preview && (
-                <div className="md:col-span-1 flex justify-center items-start">
-                  <img
-                    src={typeof preview === "string" ? preview : preview.url}
-                    alt={fileData.file || "preview"}
-                    className="max-h-48 w-full object-contain rounded-xl border border-gray-700 shadow-lg"
-                    onError={(e) => {
-                      e.currentTarget.src = "/fallback.png";
-                    }}
-                  />
-                </div>
-              )}
 
               {/* Metadata/Prompt Section */}
               <div
