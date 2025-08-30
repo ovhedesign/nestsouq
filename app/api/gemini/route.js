@@ -152,12 +152,12 @@ Keywords: <comma-separated keywords>
 Description: <description>
 Category: <comma-separated categories>
 
-Requirements:
-- Title: ${minTitle}-${maxTitle} words
-- Keywords: ${minKeywords}-${maxKeywords} items
-- Description: ${minDesc}-${maxDesc} words
-- Category: 1-3 relevant categories
-- Be factual, concise, and descriptive`
+Strictly follow these requirements:
+- Title: MUST be between ${minTitle} and ${maxTitle} words.
+- Keywords: MUST be between ${minKeywords} and ${maxKeywords} items.
+- Description: MUST be between ${minDesc} and ${maxDesc} words.
+- Category: MUST be between 1 and 3 relevant categories.
+- Be factual, concise, and descriptive.`
         : `Analyze this ${finalMimeType} image and generate 10 diverse, creative, and engaging prompts for social media posts ${languageInstruction}. The prompts should be suitable for platforms like Instagram, Facebook, and Twitter. Ensure the prompts are of high quality and tailored to the image's content.`;
 
     const result = await model.generateContent([

@@ -268,14 +268,14 @@ export function ResultCard({
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            <div className="mt-4 space-y-6 text-gray-300">
-              {/* Image Preview (Now inside expanded section) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+              {/* Image Preview */}
               {preview && (
-                <div className="flex justify-center mb-4">
+                <div className="md:col-span-1 flex justify-center items-start">
                   <img
                     src={typeof preview === "string" ? preview : preview.url}
                     alt={fileData.file || "preview"}
-                    className="max-h-40 rounded-xl border border-gray-700 object-contain shadow-lg"
+                    className="max-h-48 w-full object-contain rounded-xl border border-gray-700 shadow-lg"
                     onError={(e) => {
                       e.currentTarget.src = "/fallback.png";
                     }}
@@ -283,94 +283,96 @@ export function ResultCard({
                 </div>
               )}
 
-              {mode === "meta" && (
-                <div className="space-y-5">
-                  {/* Title */}
-                  <FieldCard
-                    label="Title"
-                    value={fileData.meta.title}
-                    field="title"
-                    copiedField={copiedField}
-                    copyToClipboard={copyToClipboard}
-                    className="bg-blue-900/10 border-blue-600/50"
-                  />
+              {/* Metadata/Prompt Section */}
+              <div
+                className={`space-y-5 text-gray-300 ${
+                  preview ? "md:col-span-2" : "md:col-span-3"
+                }`}
+              >
+                {mode === "meta" && (
+                  <div className="space-y-5">
+                    <FieldCard
+                      label="Title"
+                      value={fileData.meta.title}
+                      field="title"
+                      copiedField={copiedField}
+                      copyToClipboard={copyToClipboard}
+                      className="bg-blue-900/10 border-blue-600/50"
+                    />
 
-                  {/* Keywords */}
-                  {mode === "meta" && (
-                    <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg">
-                      <div className="flex items-center justify-between mb-2">
-                        <h4 className="text-sm font-semibold text-blue-400">
-                          Keywords ({fileData.meta.keywords?.length || 0})
-                        </h4>
-                        <CopyButton
-                          field="keywords"
-                          value={(fileData.meta.keywords || []).join(", ")}
-                          copiedField={copiedField}
-                          copyToClipboard={copyToClipboard}
-                        />
+                    {mode === "meta" && (
+                      <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="text-sm font-semibold text-blue-400">
+                            Keywords ({fileData.meta.keywords?.length || 0})
+                          </h4>
+                          <CopyButton
+                            field="keywords"
+                            value={(fileData.meta.keywords || []).join(", ")}
+                            copiedField={copiedField}
+                            copyToClipboard={copyToClipboard}
+                          />
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {fileData.meta.keywords?.length ? (
+                            fileData.meta.keywords.map((k, i) => (
+                              <span
+                                key={i}
+                                className="bg-blue-900/50 text-blue-200 px-3 py-1 rounded-full text-sm"
+                              >
+                                {k}
+                              </span>
+                            ))
+                          ) : (
+                            <p className="text-gray-400">No keywords</p>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {fileData.meta.keywords?.length ? (
-                          fileData.meta.keywords.map((k, i) => (
+                    )}
+
+                    <FieldCard
+                      label="Description"
+                      value={fileData.meta.description}
+                      field="desc"
+                      copiedField={copiedField}
+                      copyToClipboard={copyToClipboard}
+                      className="bg-gray-800/50 border-gray-700"
+                    />
+
+                    {fileData.meta.category && (
+                      <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg">
+                        <h4 className="text-sm font-semibold text-purple-400 mb-2">
+                          Category
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {fileData.meta.category.map((cat, i) => (
                             <span
                               key={i}
-                              className="bg-blue-900/50 text-blue-200 px-3 py-1 rounded-full text-sm"
+                              className="bg-purple-900/50 text-purple-200 px-3 py-1 rounded-full text-sm"
                             >
-                              {k}
+                              {cat}
                             </span>
-                          ))
-                        ) : (
-                          <p className="text-gray-400">No keywords</p>
-                        )}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
+                )}
 
-                  {/* Description */}
-                  <FieldCard
-                    label="Description"
-                    value={fileData.meta.description}
-                    field="desc"
-                    copiedField={copiedField}
-                    copyToClipboard={copyToClipboard}
-                    className="bg-gray-800/50 border-gray-700"
-                  />
-
-                  {/* Category */}
-                  {fileData.meta.category && (
-                    <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg">
-                      <h4 className="text-sm font-semibold text-purple-400 mb-2">
-                        Category
-                      </h4>
-                      <div className="flex flex-wrap gap-2">
-                        {fileData.meta.category.map((cat, i) => (
-                          <span
-                            key={i}
-                            className="bg-purple-900/50 text-purple-200 px-3 py-1 rounded-full text-sm"
-                          >
-                            {cat}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {mode === "prompt" && (
-                <div className="space-y-4">
-                  <FieldCard
-                    label="Generated Prompt"
-                    value={fileData.prompt || "No generated prompt available"} // fallback
-                    field="prompt"
-                    copiedField={copiedField}
-                    copyToClipboard={copyToClipboard}
-                    className="bg-amber-900/10 border-amber-600/50"
-                    isPrompt
-                  />
-                </div>
-              )}
-            </div>
+                {mode === "prompt" && (
+                  <div className="space-y-4">
+                    <FieldCard
+                      label="Generated Prompt"
+                      value={fileData.prompt || "No generated prompt available"} // fallback
+                      field="prompt"
+                      copiedField={copiedField}
+                      copyToClipboard={copyToClipboard}
+                      className="bg-amber-900/10 border-amber-600/50"
+                      isPrompt
+                    />
+                  </div>
+                )}
+              </div>
           </motion.div>
         )}
       </AnimatePresence>

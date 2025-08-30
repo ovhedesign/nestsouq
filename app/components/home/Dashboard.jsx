@@ -661,6 +661,7 @@ export default function DashboardPage() {
                     onClick={() =>
                       dispatch({ type: "SET_MODE", payload: "meta" })
                     }
+                    disabled={results.length > 0}
                     className={`flex-1 border-2 transition-all duration-300 ${
                       state.mode === "meta"
                         ? "bg-blue-500 border-blue-400 text-white shadow-md"
@@ -673,6 +674,7 @@ export default function DashboardPage() {
                     onClick={() =>
                       dispatch({ type: "SET_MODE", payload: "prompt" })
                     }
+                    disabled={results.length > 0}
                     className={`flex-1 border-2 transition-all duration-300 ${
                       state.mode === "prompt"
                         ? "bg-amber-500 border-amber-400 text-black shadow-md"
