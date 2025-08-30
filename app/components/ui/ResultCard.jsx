@@ -25,6 +25,7 @@ export function ResultCard({
 }) {
   const [expanded, setExpanded] = useState(true);
   const [copiedField, setCopiedField] = useState(null);
+  const isEps = fileData.file?.toLowerCase().endsWith(".eps");
 
   const copyToClipboard = async (text, field) => {
     try {
@@ -58,7 +59,7 @@ export function ResultCard({
             "Releases",
           ];
           row = [
-            `"${filenameWithoutExt}"`,
+            `"${filenameWithoutExt}"`, 
             `"${title || ""}"`,
             `"${(keywords || []).join(",")}"`,
             `"${(category || []).join(", ")}"`,
@@ -68,7 +69,7 @@ export function ResultCard({
         case "freepik":
           headers = ["Filename", "Title", "Keywords"];
           row = [
-            `"${filenameWithoutExt}.jpg"`,
+            `"${filenameWithoutExt}.jpg"`, 
             `"${title || ""}"`,
             `"${(keywords || []).join(",")}"`,
           ];
@@ -82,7 +83,7 @@ export function ResultCard({
             "Image Type",
           ];
           row = [
-            `"${filenameWithoutExt}"`,
+            `"${filenameWithoutExt}"`, 
             `"${title || ""}"`,
             `"${description || ""}"`,
             `"${(keywords || []).join(",")}"`,
@@ -92,7 +93,7 @@ export function ResultCard({
         case "adobestock":
           headers = ["Filename", "Title", "Keywords", "Description"];
           row = [
-            `"${filenameWithoutExt}"`,
+            `"${filenameWithoutExt}"`, 
             `"${title || ""}"`,
             `"${(keywords || []).join(",")}"`,
             `"${description || ""}"`,
@@ -268,23 +269,31 @@ export function ResultCard({
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
           >
-            {preview && (
-              <div className=" flex justify-center items-start">
-                <img
-                  src={typeof preview === "string" ? preview : preview.url}
-                  alt={fileData.file || "preview"}
-                  className="max-h-48 w-full object-contain rounded-xl border border-gray-700 shadow-lg"
-                />
-              </div>
-            )}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
               {/* Image Preview */}
+              {preview && (
+                <div className="md:col-span-1 flex justify-center items-start">
+                  {isEps ? (
+                    <div className="flex justify-center items-center h-48 w-full object-contain rounded-xl border border-gray-700 shadow-lg bg-gray-800">
+                      <p className="text-gray-400 px-4 text-center">
+                        No preview available for EPS files
+                      </p>
+                    </div>
+                  ) : (
+                    <img
+                      src={
+                        typeof preview === "string" ? preview : preview.url
+                      }
+                      alt={fileData.file || "preview"}
+                      className="max-h-48 w-full object-contain rounded-xl border border-gray-700 shadow-lg"
+                    />
+                  )}
+                </div>
+              )}
 
               {/* Metadata/Prompt Section */}
               <div
-                className={`space-y-5 text-gray-300 ${
-                  preview ? "md:col-span-2" : "md:col-span-3"
-                }`}
+                className={`space-y-5 text-gray-300 ${preview ? "md:col-span-2" : "md:col-span-3"}`}
               >
                 {mode === "meta" && (
                   <div className="space-y-5">
@@ -359,7 +368,7 @@ export function ResultCard({
                 {mode === "prompt" && (
                   <div className="space-y-4">
                     <FieldCard
-                      label="Generated Prompt"
+                      label="Prompt"
                       value={fileData.prompt || "No generated prompt available"} // fallback
                       field="prompt"
                       copiedField={copiedField}
@@ -417,9 +426,7 @@ const FieldCard = ({
       />
     </div>
     <p
-      className={`${
-        isPrompt ? "font-mono whitespace-pre-wrap" : "text-lg"
-      } break-words text-gray-100`}
+      className={`${isPrompt ? "font-mono whitespace-pre-wrap" : "text-lg"} break-words text-gray-100`}
     >
       {value || `No ${label.toLowerCase()} available`}
     </p>

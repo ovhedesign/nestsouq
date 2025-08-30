@@ -160,7 +160,7 @@ Strictly follow these requirements:
 - Description: MUST be between ${minDesc} and ${maxDesc} words.
 - Category: MUST be between 1 and 3 relevant categories.
 - Be factual, concise, and descriptive.`
-        : "Analyze this image in detail. Describe objects, style, mood, and key attributes.";
+        : "Analyze this image in detail. Describe objects, style, mood, and key attributes in few lines only that contains all relevant information about the image.";
 
     const result = await model.generateContent([
       { inlineData: { data: base64Image, mimeType: finalMimeType } },
