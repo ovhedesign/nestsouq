@@ -249,23 +249,25 @@ export default function DashboardPage() {
 
   const createPreview = async (file) => {
     const fileExtension = file.name?.split(".").pop()?.toLowerCase();
-    if (file.type === "image/tiff" || fileExtension === "eps") {
+    if (fileExtension === "eps") {
       return "unsupported";
     }
 
     let previewFile = file;
 
-    // For browser-supported conversion: BMP
-    if (file.type === "image/bmp") {
+    // For browser-supported conversion: BMP, TIFF, GIF
+    if (["image/bmp", "image/tiff", "image/gif"].includes(file.type)) {
       try {
         previewFile = await imageCompression(file, {
           maxSizeMB: 0.06, // ~60KB
           maxWidthOrHeight: 200,
           useWebWorker: true,
           initialQuality: 0.7,
+          fileType: "image/png", // convert to png for preview
         });
       } catch (err) {
         console.error("Compression failed:", err);
+        return "unsupported"; // return unsupported if conversion fails
       }
     }
 
@@ -321,7 +323,6 @@ export default function DashboardPage() {
       let compressedFile = file;
       if (
         file.type.startsWith("image/") &&
-        file.type !== "image/gif" &&
         file.type !== "application/postscript"
       ) {
         compressedFile = await imageCompression(file, options);
