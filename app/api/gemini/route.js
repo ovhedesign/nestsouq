@@ -27,7 +27,7 @@ const t = (key, loc) => {
 };
 
 // ----------- Helper: Metadata Parser -----------
-function parseMetadata(text) {
+function parseMetadata(text, maxKeywords) {
   const titleMatch = text.match(/Title:\s*(.+)/i);
   const keywordsMatch = text.match(
     /Keywords:\s*([\s\S]+?)\n(?:Description:|Category:)/i
@@ -37,12 +37,16 @@ function parseMetadata(text) {
   );
   const categoryMatch = text.match(/Category:\s*([\s\S]+)/i);
 
-  const keywords = keywordsMatch
+  let keywords = keywordsMatch
     ? keywordsMatch[1]
         .split(/,|\n|\t/)
         .map((k) => k.trim())
         .filter(Boolean)
     : [];
+
+  if (keywords.length > 0) {
+    keywords = keywords.slice(0, maxKeywords);
+  }
 
   const categories = categoryMatch
     ? categoryMatch[1]
@@ -168,7 +172,7 @@ Strictly follow these requirements:
     ]);
 
     const responseText = result.response.text();
-    const meta = mode === "meta" ? parseMetadata(responseText) : {};
+    const meta = mode === "meta" ? parseMetadata(responseText, maxKeywords) : {};
 
     // ---- Deduct Credits ----
     const db = await getDb("nestsouq");
