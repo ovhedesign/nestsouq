@@ -27,12 +27,12 @@ export default async function RootLayout({ children, params: { locale } }) {
         <meta property="og:title" content={siteTitle} />
         <meta property="og:description" content={siteDescription} />
         <meta property="og:url" content={siteUrl} />
-        <meta property="og:image" content={socialImage.src} />{" "}
+        <meta property="og:image" content={socialImage.src} />
         {/* use imported image */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={siteTitle} />
         <meta name="twitter:description" content={siteDescription} />
-        <meta name="twitter:image" content={socialImage.src} />{" "}
+        <meta name="twitter:image" content={socialImage.src} />
         {/* use imported image */}
         <meta name="geo.region" content="AE" />
         <meta name="geo.placename" content="Dubai" />

@@ -452,7 +452,6 @@ export default function DashboardPage() {
     }
     dispatch({ type: "SET_LOADING", payload: false });
   };
-
   const downloadCsv = () => {
     const results = state.processedFiles.filter((f) => f.result);
     if (results.length === 0) return;
@@ -465,107 +464,102 @@ export default function DashboardPage() {
       headers = ["Prompt"];
       rows = results.map((file) => [`"${file.result.prompt}"`]);
     } else {
-      switch (platform) {
-        case "shutterstock":
-          headers = [
-            "Filename",
-            "Description",
-            "Keywords",
-            "Categories",
-            "Releases",
+      if (platform === "shutterstock") {
+        headers = [
+          "Filename",
+          "Description",
+          "Keywords",
+          "Categories",
+          "Releases",
+        ];
+        rows = results.map((file) => {
+          const filenameWithoutExt =
+            file.result.file.split(".").slice(0, -1).join(".") ||
+            file.result.file;
+          return [
+            `"${filenameWithoutExt}"`,
+            `"${file.result.meta?.title || ""}"`,
+            `"${(file.result.meta?.keywords || []).join(",")}"`,
+            `"${(file.result.meta?.category || []).join(", ")}"`,
+            '""',
           ];
-          rows = results.map((file) => {
-            const filenameWithoutExt =
-              file.result.file.split(".").slice(0, -1).join(".") ||
-              file.result.file;
-            return [
-              `"${filenameWithoutExt}"`,
-              `"${file.result.meta?.title || ""}"`,
-              `"${(file.result.meta?.keywords || []).join(",")}"`,
-              `"${(file.result.meta?.category || []).join(", ")}"`,
-              '""', // Releases
-            ];
-          });
-          break;
-        case "freepik":
-          headers = ["Filename", "Title", "Keywords"];
-          rows = results.map((file) => {
-            const r = file.result;
-            const filenameWithoutExt =
-              r.file.split(".").slice(0, -1).join(".") || r.file;
-            return [
-              `"${filenameWithoutExt}.jpg"`,
-              `"${r.meta?.title || ""}"`,
-              `"${(r.meta?.keywords || []).join(",")}"`,
-            ];
-          });
-          break;
-        case "vecteezy":
-          headers = [
-            "Filename",
-            "Title",
-            "Description",
-            "Keywords",
-            "Image Type",
+        });
+      } else if (platform === "freepik") {
+        headers = ["Filename", "Title", "Keywords"];
+        rows = results.map((file) => {
+          const r = file.result;
+          const filenameWithoutExt =
+            r.file.split(".").slice(0, -1).join(".") || r.file;
+          return [
+            `"${filenameWithoutExt}.jpg"`,
+            `"${r.meta?.title || ""}"`,
+            `"${(r.meta?.keywords || []).join(",")}"`,
           ];
-          rows = results.map((file) => {
-            const r = file.result;
-            const filenameWithoutExt =
-              r.file.split(".").slice(0, -1).join(".") || r.file;
-            return [
-              `"${filenameWithoutExt}"`,
-              `"${r.meta?.title || ""}"`,
-              `"${r.meta?.description || ""}"`,
-              `"${(r.meta?.keywords || []).join(",")}"`,
-              '"Photo"',
-            ];
-          });
-          break;
-        case "adobestock":
-          headers = ["Filename", "Title", "Keywords", "Description"];
-          rows = results.map((file) => {
-            const r = file.result;
-            const filenameWithoutExt =
-              r.file.split(".").slice(0, -1).join(".") || r.file;
-            return [
-              `"${filenameWithoutExt}"`,
-              `"${r.meta?.title || ""}"`,
-              `"${(r.meta?.keywords || []).join(",")}"`,
-              `"${r.meta?.description || ""}"`,
-            ];
-          });
-          break;
-        default:
-          headers = [
-            "filename",
-            "title",
-            "keywords",
-            "description",
-            "category",
-            "engine",
-            "ok",
+        });
+      } else if (platform === "vecteezy") {
+        headers = [
+          "Filename",
+          "Title",
+          "Description",
+          "Keywords",
+          "Image Type",
+        ];
+        rows = results.map((file) => {
+          const r = file.result;
+          const filenameWithoutExt =
+            r.file.split(".").slice(0, -1).join(".") || r.file;
+          return [
+            `"${filenameWithoutExt}"`,
+            `"${r.meta?.title || ""}"`,
+            `"${r.meta?.description || ""}"`,
+            `"${(r.meta?.keywords || []).join(",")}"`,
+            '"Photo"',
           ];
-          rows = results.map((file) => {
-            const r = file.result;
-            return [
-              `"${r.file}"`,
-              `"${r.meta?.title || ""}"`,
-              `"${
-                Array.isArray(r.meta?.keywords)
-                  ? r.meta.keywords.join("|")
-                  : r.meta?.keywords || ""
-              }"`,
-              `"${r.meta?.description || ""}"`,
-              `"${
-                Array.isArray(r.meta?.category)
-                  ? r.meta.category.join("|")
-                  : r.meta?.category || ""
-              }"`,
-              `"${r.engine || ""}"`,
-              `"${r.ok ? "ok" : "error"}"`,
-            ];
-          });
-          break;
+        });
+      } else if (platform === "adobestock") {
+        headers = ["Filename", "Title", "Keywords", "Description"];
+        rows = results.map((file) => {
+          const r = file.result;
+          const filenameWithoutExt =
+            r.file.split(".").slice(0, -1).join(".") || r.file;
+          return [
+            `"${filenameWithoutExt}"`,
+            `"${r.meta?.title || ""}"`,
+            `"${(r.meta?.keywords || []).join(",")}"`,
+            `"${r.meta?.description || ""}"`,
+          ];
+        });
+      } else {
+        // Default generic export
+        headers = [
+          "filename",
+          "title",
+          "keywords",
+          "description",
+          "category",
+          "engine",
+          "ok",
+        ];
+        rows = results.map((file) => {
+          const r = file.result;
+          return [
+            `"${r.file}"`,
+            `"${r.meta?.title || ""}"`,
+            `"${
+              Array.isArray(r.meta?.keywords)
+                ? r.meta.keywords.join("|")
+                : r.meta?.keywords || ""
+            }"`,
+            `"${r.meta?.description || ""}"`,
+            `"${
+              Array.isArray(r.meta?.category)
+                ? r.meta.category.join("|")
+                : r.meta?.category || ""
+            }"`,
+            `"${r.engine || ""}"`,
+            `"${r.ok ? "ok" : "error"}"`,
+          ];
+        });
       }
     }
 
