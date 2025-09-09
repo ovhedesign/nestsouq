@@ -46,7 +46,9 @@
     "Default": "Default",
     "Shutterstock": "Shutterstock",
     "Freepik": "Freepik",
-    "Vecteezy": "Vecteezy"
+    "Vecteezy": "Vecteezy",
+    "platformSelectDisabledTooltip": "You can't change the platform after processing images.",
+    "filesProcessedSuccess": "Files processed successfully!"
   },
   "Login": {
     "welcomeTo": "Welcome to",

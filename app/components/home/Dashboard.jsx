@@ -451,6 +451,46 @@ export default function DashboardPage() {
       });
     }
     dispatch({ type: "SET_LOADING", payload: false });
+    resultsContainerRef.current?.scrollIntoView({ behavior: "smooth" });
+    dispatch({
+      type: "SET_ERROR_MSG",
+      payload: t("filesProcessedSuccess"),
+    });
+    setTimeout(() => {
+      dispatch({ type: "SET_ERROR_MSG", payload: "" });
+    }, 3000);
+    resultsContainerRef.current?.scrollIntoView({ behavior: "smooth" });
+    dispatch({
+      type: "SET_ERROR_MSG",
+      payload: t("filesProcessedSuccess"),
+    });
+    setTimeout(() => {
+      dispatch({ type: "SET_ERROR_MSG", payload: "" });
+    }, 3000);
+    resultsContainerRef.current?.scrollIntoView({ behavior: "smooth" });
+    dispatch({
+      type: "SET_ERROR_MSG",
+      payload: t("filesProcessedSuccess"),
+    });
+    setTimeout(() => {
+      dispatch({ type: "SET_ERROR_MSG", payload: "" });
+    }, 3000);
+    resultsContainerRef.current?.scrollIntoView({ behavior: "smooth" });
+    dispatch({
+      type: "SET_ERROR_MSG",
+      payload: t("filesProcessedSuccess"),
+    });
+    setTimeout(() => {
+      dispatch({ type: "SET_ERROR_MSG", payload: "" });
+    }, 3000);
+    resultsContainerRef.current?.scrollIntoView({ behavior: "smooth" });
+    dispatch({
+      type: "SET_ERROR_MSG",
+      payload: t("filesProcessedSuccess"),
+    });
+    setTimeout(() => {
+      dispatch({ type: "SET_ERROR_MSG", payload: "" });
+    }, 3000);
   };
   const downloadCsv = () => {
     const results = state.processedFiles.filter((f) => f.result);
@@ -465,27 +505,20 @@ export default function DashboardPage() {
       rows = results.map((file) => [`"${file.result.prompt}"`]);
     } else {
       if (platform === "shutterstock") {
-        headers = [
-          "Filename",
-          "Description",
-          "Keywords",
-          "Categories",
-          "Releases",
-        ];
+        // This block is specifically for Shutterstock and will only generate the 3 specified columns.
+        headers = ["Filename", "Description", "Keywords"];
         rows = results.map((file) => {
           const filenameWithoutExt =
             file.result.file.split(".").slice(0, -1).join(".") ||
             file.result.file;
           return [
             `"${filenameWithoutExt}"`,
-            `"${file.result.meta?.title || ""}"`,
+            `"${file.result.meta?.description || ""}"`,
             `"${(file.result.meta?.keywords || []).join(",")}"`,
-            `"${(file.result.meta?.category || []).join(", ")}"`,
-            '""',
           ];
         });
       } else if (platform === "freepik") {
-        headers = ["Filename", "Title", "Keywords"];
+        headers = ["File name", "Title", "Keywords", "Prompt", "Base-Model"];
         rows = results.map((file) => {
           const r = file.result;
           const filenameWithoutExt =
@@ -494,16 +527,12 @@ export default function DashboardPage() {
             `"${filenameWithoutExt}.jpg"`,
             `"${r.meta?.title || ""}"`,
             `"${(r.meta?.keywords || []).join(",")}"`,
+            `"${r.prompt || ""}"`,
+            '""', // Placeholder for Base-Model
           ];
         });
       } else if (platform === "vecteezy") {
-        headers = [
-          "Filename",
-          "Title",
-          "Description",
-          "Keywords",
-          "Image Type",
-        ];
+        headers = ["Filename", "Title", "Description", "Keywords"];
         rows = results.map((file) => {
           const r = file.result;
           const filenameWithoutExt =
@@ -513,11 +542,10 @@ export default function DashboardPage() {
             `"${r.meta?.title || ""}"`,
             `"${r.meta?.description || ""}"`,
             `"${(r.meta?.keywords || []).join(",")}"`,
-            '"Photo"',
           ];
         });
       } else if (platform === "adobestock") {
-        headers = ["Filename", "Title", "Keywords", "Description"];
+        headers = ["Filename", "Title", "Keywords"];
         rows = results.map((file) => {
           const r = file.result;
           const filenameWithoutExt =
@@ -526,38 +554,18 @@ export default function DashboardPage() {
             `"${filenameWithoutExt}"`,
             `"${r.meta?.title || ""}"`,
             `"${(r.meta?.keywords || []).join(",")}"`,
-            `"${r.meta?.description || ""}"`,
           ];
         });
       } else {
-        // Default generic export
-        headers = [
-          "filename",
-          "title",
-          "keywords",
-          "description",
-          "category",
-          "engine",
-          "ok",
-        ];
+        // Default case to prevent unwanted fields
+        headers = ["Filename", "Title", "Keywords", "Description"];
         rows = results.map((file) => {
           const r = file.result;
           return [
             `"${r.file}"`,
             `"${r.meta?.title || ""}"`,
-            `"${
-              Array.isArray(r.meta?.keywords)
-                ? r.meta.keywords.join("|")
-                : r.meta?.keywords || ""
-            }"`,
+            `"${(r.meta?.keywords || []).join(",")}"`,
             `"${r.meta?.description || ""}"`,
-            `"${
-              Array.isArray(r.meta?.category)
-                ? r.meta.category.join("|")
-                : r.meta?.category || ""
-            }"`,
-            `"${r.engine || ""}"`,
-            `"${r.ok ? "ok" : "error"}"`,
           ];
         });
       }
@@ -715,19 +723,23 @@ export default function DashboardPage() {
                     { id: "vecteezy", name: t("Vecteezy") },
                     { id: "adobestock", name: t("adobeStock") }, // Added AdobeStock
                   ].map((p) => (
-                    <Button
-                      key={p.id}
-                      onClick={() =>
-                        dispatch({ type: "SET_PLATFORM", payload: p.id })
-                      }
-                      className={`border-2 transition-all duration-300 ${
-                        state.platform === p.id
-                          ? "bg-green-500 border-green-400 text-white shadow-md"
-                          : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
-                      }`}
-                    >
-                      {p.name}
-                    </Button>
+                 
+                          <Button
+                            onClick={() =>
+                              dispatch({ type: "SET_PLATFORM", payload: p.id })
+                            }
+                            disabled={results.length > 0}
+                            className={`border-2 transition-all duration-300 ${
+                              state.platform === p.id
+                                ? "bg-green-500 border-green-400 text-white shadow-md"
+                                : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
+                            } ${
+                              results.length > 0 ? "disabled:opacity-50" : ""
+                            }`}
+                          >
+                            {p.name}
+                          </Button>
+                 
                   ))}
                 </div>
               </CardContent>
@@ -914,7 +926,10 @@ export default function DashboardPage() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="text-red-400 text-sm text-center bg-red-900/20 p-2 rounded-lg"
+                      className={`${state.errorMsg === t("filesProcessedSuccess")
+                          ? "text-green-400 bg-green-900/20"
+                          : "text-red-400 bg-red-900/20"
+                        } text-sm text-center p-2 rounded-lg`}
                     >
                       {state.errorMsg}
                     </motion.p>

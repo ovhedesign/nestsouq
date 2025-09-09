@@ -94,7 +94,7 @@ async function convertFile(buffer, file, locale) {
     const outputBuffer = await fs.promises.readFile(tmpOutput.name);
     return { buffer: outputBuffer, mimeType: "image/jpeg" };
   } catch (err) {
-    console.error("Conversion failed:", err);
+    console.error("Conversion failed for file:", file.name, "Error:", err);
     throw new Error(t("fileConversionFailed", locale));
   } finally {
     tmpInput.removeCallback();

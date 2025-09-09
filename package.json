@@ -12,7 +12,9 @@
     "@google/genai": "^1.15.0",
     "@google/generative-ai": "^0.24.1",
     "@paypal/react-paypal-js": "^8.8.3",
+    "@radix-ui/react-tooltip": "^1.2.8",
     "browser-image-compression": "^2.0.2",
+    "clsx": "^2.1.1",
     "dotenv": "^17.2.1",
     "firebase": "^12.1.0",
     "firebase-admin": "^13.4.0",
@@ -28,7 +30,9 @@
     "openai": "^5.13.1",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-icons": "^5.5.0"
+    "react-icons": "^5.5.0",
+    "tailwind-merge": "^3.3.1",
+    "tmp": "^0.2.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

@@ -43,7 +43,8 @@
     "Shutterstock": "شترستوك",
     "Freepik": "فري بيك",
     "Vecteezy": "فيكتيزي",
-    "adobeStock": "أدوبي ستوك"
+    "adobeStock": "أدوبي ستوك",
+    "platformSelectDisabledTooltip": "لا يمكنك تغيير المنصة بعد معالجة الصور."
   },
   "Login": {
     "welcomeTo": "أهلاً بك في",

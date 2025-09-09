@@ -55,37 +55,27 @@ export function ResultCard({
 
       switch (platform) {
         case "shutterstock":
-          headers = [
-            "Filename",
-            "Description",
-            "Keywords",
-            "Categories",
-            "Releases",
-          ];
+          headers = ["Filename", "Description", "Keywords"];
           row = [
             `"${filenameWithoutExt}"`,
             `"${title || ""}"`,
             `"${(keywords || []).join(",")}"`,
-            `"${(category || []).join(", ")}"`,
+
             `""`,
           ];
           break;
         case "freepik":
-          headers = ["Filename", "Title", "Keywords"];
+          headers = ["File name", "Title", "Keywords", "Prompt", "Base-Model"];
           row = [
             `"${filenameWithoutExt}.jpg"`,
             `"${title || ""}"`,
             `"${(keywords || []).join(",")}"`,
+            `"${fileData.prompt || ""}"`,
+            `""`, // Placeholder for Base-Model
           ];
           break;
         case "vecteezy":
-          headers = [
-            "Filename",
-            "Title",
-            "Description",
-            "Keywords",
-            "Image Type",
-          ];
+          headers = ["Filename", "Title", "Description", "Keywords"];
           row = [
             `"${filenameWithoutExt}"`,
             `"${title || ""}"`,
@@ -95,12 +85,11 @@ export function ResultCard({
           ];
           break;
         case "adobestock":
-          headers = ["Filename", "Title", "Keywords", "Description"];
+          headers = ["Filename", "Title", "Keywords"];
           row = [
             `"${filenameWithoutExt}"`,
             `"${title || ""}"`,
             `"${(keywords || []).join(",")}"`,
-            `"${description || ""}"`,
           ];
           break;
         default:

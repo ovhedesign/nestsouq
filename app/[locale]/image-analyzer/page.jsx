@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useUser } from '@clerk/nextjs';
 
@@ -34,12 +34,18 @@ export default function ImageAnalyzer() {
 
       const data = await response.json();
       setResult(data);
+      // Scroll to results
+      if (resultsRef.current) {
+        resultsRef.current.scrollIntoView({ behavior: 'smooth' });
+      }
     } catch (error) {
       console.error('Error analyzing image:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const resultsRef = useRef(null);
 
   return (
     <div className="container mx-auto p-4">
@@ -97,7 +103,7 @@ export default function ImageAnalyzer() {
       </form>
 
       {result && (
-        <div className="mt-8">
+        <div className="mt-8" ref={resultsRef}>
           <h2 className="text-xl font-semibold">{t('resultsTitle')}</h2>
           {mode === 'meta' ? (
             <pre className="mt-2 bg-gray-100 p-4 rounded-md">
