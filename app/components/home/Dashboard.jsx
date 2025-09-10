@@ -293,8 +293,8 @@ export default function DashboardPage() {
 
     const newProcessedFiles = await Promise.all(
       accepted.map(async (f) => ({
-        originalFile: f,
-        previewUrl: await createPreview(f), // <- convert/compress for preview
+        originalFile: f, // <-- This should be the File object
+        previewUrl: await createPreview(f), // This is only for preview
         result: null,
       }))
     );
