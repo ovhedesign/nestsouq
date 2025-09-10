@@ -37,6 +37,7 @@ export default async function RootLayout({ children, params: { locale } }) {
         <meta name="geo.region" content="AE" />
         <meta name="geo.placename" content="Dubai" />
         <meta name="geo.position" content="25.276987;55.296249" />
+        <link rel="icon" href="/logo.png" />
       </head>
 
       <body className="font-almarai" data-locale={locale}>

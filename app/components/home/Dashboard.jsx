@@ -281,13 +281,23 @@ export default function DashboardPage() {
     const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
     const accepted = arr.filter((f) => ACCEPTED.includes(f.type));
-    const rejectedByType = arr.filter((f) => !ACCEPTED.includes(f.type));
+    const rejected = arr.filter((f) => !ACCEPTED.includes(f.type));
     const rejectedBySize = accepted.filter((f) => f.size > MAX_FILE_SIZE);
+    const rejectedTiff = rejected.filter((f) => f.type === "image/tiff");
+    const otherRejected = rejected.filter((f) => f.type !== "image/tiff");
 
-    if (rejectedByType.length > 0) {
+    if (rejectedTiff.length > 0) {
       dispatch({
         type: "SET_ERROR_MSG",
-        payload: t("unsupportedFileType", { count: rejectedByType.length }),
+        payload: t("unsupportedTiff", { count: rejectedTiff.length }),
+      });
+      setTimeout(() => dispatch({ type: "SET_ERROR_MSG", payload: "" }), 3000);
+    }
+
+    if (otherRejected.length > 0) {
+      dispatch({
+        type: "SET_ERROR_MSG",
+        payload: t("unsupportedFileType", { count: otherRejected.length }),
       });
       setTimeout(() => dispatch({ type: "SET_ERROR_MSG", payload: "" }), 3000);
     }

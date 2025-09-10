@@ -38,6 +38,7 @@
     "notEnoughCredits": "Not enough credits. Please upgrade your plan.",
     "noFilesToProcess": "No files to process",
     "unsupportedFileType": "Rejected {count} file(s) — unsupported type.",
+    "unsupportedTiff": "Rejected {count} TIFF file(s) — this format is not supported.",
     "fileTooLarge": "Rejected {count} file(s) — size exceeds {size} limit.",
     "language": "Language",
     "imageCompressionFailed": "Failed to compress {filename}. Using original file.",

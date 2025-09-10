@@ -34,6 +34,7 @@
     "notEnoughCredits": "لا توجد أرصدة كافية. يرجى ترقية خطتك.",
     "noFilesToProcess": "لا توجد ملفات للمعالجة",
     "unsupportedFileType": "تم رفض {count} ملف (ملفات) — نوع غير مدعوم.",
+    "unsupportedTiff": "تم رفض {count} ملف (ملفات) TIFF — هذا التنسيق غير مدعوم.",
     "fileTooLarge": "تم رفض {count} ملف (ملفات) — الحجم يتجاوز حد {size}.",
     "language": "اللغة",
     "imageCompressionFailed": "فشل ضغط {filename}. استخدام الملف الأصلي.",
