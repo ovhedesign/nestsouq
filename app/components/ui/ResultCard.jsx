@@ -13,6 +13,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Skeleton } from "@/components/ui/Skeleton"; // Add this import if you have a Skeleton component
 
 export function ResultCard({
   mode,
@@ -271,7 +272,7 @@ export function ResultCard({
 
         {/* Expanded Body */}
         <AnimatePresence>
-          {expanded && fileData.ok && (
+          {expanded && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -279,119 +280,139 @@ export function ResultCard({
               transition={{ duration: 0.3 }}
               className="overflow-hidden"
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-                {preview && (
+              {isProcessing ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
                   <div className="md:col-span-1 flex justify-center items-start">
-                    {isEps ? (
-                      <div className="flex justify-center items-center h-48 w-full object-contain rounded-xl border border-gray-700 shadow-lg bg-gray-800">
-                        <p className="text-gray-400 px-4 text-center">
-                          No preview available for EPS files
-                        </p>
-                      </div>
-                    ) : (
-                      <img
-                        src={
-                          typeof preview === "string" ? preview : preview.url
-                        }
-                        alt={fileData.file || "preview"}
-                        className="max-h-48 w-full object-contain rounded-xl border border-gray-700 shadow-lg"
-                      />
-                    )}
+                    <Skeleton className="h-48 w-full rounded-xl" />
                   </div>
-                )}
-
-                <div
-                  className={`space-y-5 text-gray-300 ${
-                    preview ? "md:col-span-2" : "md:col-span-3"
-                  }`}
-                >
-                  {mode === "meta" && (
-                    <div className="space-y-5">
-                      <FieldCard
-                        label="Title"
-                        value={fileData.meta.title}
-                        field="title"
-                        copiedField={copiedField}
-                        copyToClipboard={copyToClipboard}
-                        className="bg-blue-900/10 border-blue-600/50"
-                      />
-
-                      {mode === "meta" && (
-                        <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-sm font-semibold text-blue-400">
-                              Keywords ({fileData.meta.keywords?.length || 0})
-                            </h4>
-                            <CopyButton
-                              field="keywords"
-                              value={(fileData.meta.keywords || []).join(", ")}
-                              copiedField={copiedField}
-                              copyToClipboard={copyToClipboard}
-                            />
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            {fileData.meta.keywords?.length ? (
-                              fileData.meta.keywords.map((k, i) => (
-                                <span
-                                  key={i}
-                                  className="bg-blue-900/50 text-blue-200 px-3 py-1 rounded-full text-sm"
-                                >
-                                  {k}
-                                </span>
-                              ))
-                            ) : (
-                              <p className="text-gray-400">No keywords</p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      <FieldCard
-                        label="Description"
-                        value={fileData.meta.description}
-                        field="desc"
-                        copiedField={copiedField}
-                        copyToClipboard={copyToClipboard}
-                        className="bg-gray-800/50 border-gray-700"
-                      />
-
-                      {fileData.meta.category && (
-                        <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg">
-                          <h4 className="text-sm font-semibold text-purple-400 mb-2">
-                            Category
-                          </h4>
-                          <div className="flex flex-wrap gap-2">
-                            {fileData.meta.category.map((cat, i) => (
-                              <span
-                                key={i}
-                                className="bg-purple-900/50 text-purple-200 px-3 py-1 rounded-full text-sm"
-                              >
-                                {cat}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {mode === "prompt" && (
-                    <div className="space-y-4">
-                      <FieldCard
-                        label="Prompt"
-                        value={
-                          fileData.prompt || "No generated prompt available"
-                        }
-                        field="prompt"
-                        copiedField={copiedField}
-                        copyToClipboard={copyToClipboard}
-                        className="bg-amber-900/10 border-amber-600/50"
-                        isPrompt
-                      />
-                    </div>
-                  )}
+                  <div className="md:col-span-2 space-y-5">
+                    <Skeleton className="h-8 w-2/3 rounded" />
+                    <Skeleton className="h-6 w-1/2 rounded" />
+                    <Skeleton className="h-20 w-full rounded" />
+                  </div>
                 </div>
-              </div>
+              ) : (
+                fileData.ok && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+                    {preview && (
+                      <div className="md:col-span-1 flex justify-center items-start">
+                        {isEps ? (
+                          <div className="flex justify-center items-center h-48 w-full object-contain rounded-xl border border-gray-700 shadow-lg bg-gray-800">
+                            <p className="text-gray-400 px-4 text-center">
+                              No preview available for EPS files
+                            </p>
+                          </div>
+                        ) : (
+                          <img
+                            src={
+                              typeof preview === "string"
+                                ? preview
+                                : preview.url
+                            }
+                            alt={fileData.file || "preview"}
+                            className="max-h-48 w-full object-contain rounded-xl border border-gray-700 shadow-lg"
+                          />
+                        )}
+                      </div>
+                    )}
+
+                    <div
+                      className={`space-y-5 text-gray-300 ${
+                        preview ? "md:col-span-2" : "md:col-span-3"
+                      }`}
+                    >
+                      {mode === "meta" && (
+                        <div className="space-y-5">
+                          <FieldCard
+                            label="Title"
+                            value={fileData.meta.title}
+                            field="title"
+                            copiedField={copiedField}
+                            copyToClipboard={copyToClipboard}
+                            className="bg-blue-900/10 border-blue-600/50"
+                          />
+
+                          {mode === "meta" && (
+                            <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="text-sm font-semibold text-blue-400">
+                                  Keywords (
+                                  {fileData.meta.keywords?.length || 0})
+                                </h4>
+                                <CopyButton
+                                  field="keywords"
+                                  value={(fileData.meta.keywords || []).join(
+                                    ", "
+                                  )}
+                                  copiedField={copiedField}
+                                  copyToClipboard={copyToClipboard}
+                                />
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {fileData.meta.keywords?.length ? (
+                                  fileData.meta.keywords.map((k, i) => (
+                                    <span
+                                      key={i}
+                                      className="bg-blue-900/50 text-blue-200 px-3 py-1 rounded-full text-sm"
+                                    >
+                                      {k}
+                                    </span>
+                                  ))
+                                ) : (
+                                  <p className="text-gray-400">No keywords</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          <FieldCard
+                            label="Description"
+                            value={fileData.meta.description}
+                            field="desc"
+                            copiedField={copiedField}
+                            copyToClipboard={copyToClipboard}
+                            className="bg-gray-800/50 border-gray-700"
+                          />
+
+                          {fileData.meta.category && (
+                            <div className="bg-gray-800/50 border border-gray-700 p-4 rounded-lg">
+                              <h4 className="text-sm font-semibold text-purple-400 mb-2">
+                                Category
+                              </h4>
+                              <div className="flex flex-wrap gap-2">
+                                {fileData.meta.category.map((cat, i) => (
+                                  <span
+                                    key={i}
+                                    className="bg-purple-900/50 text-purple-200 px-3 py-1 rounded-full text-sm"
+                                  >
+                                    {cat}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {mode === "prompt" && (
+                        <div className="space-y-4">
+                          <FieldCard
+                            label="Prompt"
+                            value={
+                              fileData.prompt || "No generated prompt available"
+                            }
+                            field="prompt"
+                            copiedField={copiedField}
+                            copyToClipboard={copyToClipboard}
+                            className="bg-amber-900/10 border-amber-600/50"
+                            isPrompt
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              )}
             </motion.div>
           )}
         </AnimatePresence>

@@ -449,6 +449,11 @@ export default function DashboardPage() {
         type: "UPDATE_FILE_RESULT",
         payload: { index, result },
       });
+      // Auto scroll to results after each file is processed
+      resultsContainerRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "end",
+      });
     }
     dispatch({ type: "SET_LOADING", payload: false });
     resultsContainerRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -723,23 +728,19 @@ export default function DashboardPage() {
                     { id: "vecteezy", name: t("Vecteezy") },
                     { id: "adobestock", name: t("adobeStock") }, // Added AdobeStock
                   ].map((p) => (
-                 
-                          <Button
-                            onClick={() =>
-                              dispatch({ type: "SET_PLATFORM", payload: p.id })
-                            }
-                            disabled={results.length > 0}
-                            className={`border-2 transition-all duration-300 ${
-                              state.platform === p.id
-                                ? "bg-green-500 border-green-400 text-white shadow-md"
-                                : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
-                            } ${
-                              results.length > 0 ? "disabled:opacity-50" : ""
-                            }`}
-                          >
-                            {p.name}
-                          </Button>
-                 
+                    <Button
+                      onClick={() =>
+                        dispatch({ type: "SET_PLATFORM", payload: p.id })
+                      }
+                      disabled={results.length > 0}
+                      className={`border-2 transition-all duration-300 ${
+                        state.platform === p.id
+                          ? "bg-green-500 border-green-400 text-white shadow-md"
+                          : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
+                      } ${results.length > 0 ? "disabled:opacity-50" : ""}`}
+                    >
+                      {p.name}
+                    </Button>
                   ))}
                 </div>
               </CardContent>
@@ -926,10 +927,11 @@ export default function DashboardPage() {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className={`${state.errorMsg === t("filesProcessedSuccess")
+                      className={`${
+                        state.errorMsg === t("filesProcessedSuccess")
                           ? "text-green-400 bg-green-900/20"
                           : "text-red-400 bg-red-900/20"
-                        } text-sm text-center p-2 rounded-lg`}
+                      } text-sm text-center p-2 rounded-lg`}
                     >
                       {state.errorMsg}
                     </motion.p>

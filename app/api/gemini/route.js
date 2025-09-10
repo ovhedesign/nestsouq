@@ -172,7 +172,8 @@ Strictly follow these requirements:
     ]);
 
     const responseText = result.response.text();
-    const meta = mode === "meta" ? parseMetadata(responseText, maxKeywords) : {};
+    const meta =
+      mode === "meta" ? parseMetadata(responseText, maxKeywords) : {};
 
     // ---- Deduct Credits ----
     const db = await getDb("nestsouq");
@@ -216,3 +217,16 @@ Strictly follow these requirements:
     );
   }
 }
+
+// Example: d:\nestsouq\app\lib\utils.js
+export const ACCEPTED = [
+  "image/jpeg",
+  "image/png",
+  "image/bmp",
+  "image/gif",
+  "image/webp",
+  "image/tiff", // <-- Add this
+  "image/x-eps", // <-- Add this (EPS)
+  "application/postscript", // <-- Add this (EPS)
+  "image/svg+xml", // <-- Add this (SVG)
+];
