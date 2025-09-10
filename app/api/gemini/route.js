@@ -39,7 +39,7 @@ function parseMetadata(text, maxKeywords) {
 
   let keywords = keywordsMatch
     ? keywordsMatch[1]
-        .split(/,|\n|\t/)
+        .split(/,|،|\n|\t|؛|\.|-/) // Add Arabic comma, semicolon, period, dash
         .map((k) => k.trim())
         .filter(Boolean)
     : [];
