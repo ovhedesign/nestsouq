@@ -90,7 +90,7 @@ async function convertFile(buffer, file, locale) {
       throw new Error(t("unsupportedFileType", locale));
     }
 
-    await execAsync(cmd, { windowsHide: true });
+    await execAsync(cmd);
     const outputBuffer = await fs.promises.readFile(tmpOutput.name);
     return { buffer: outputBuffer, mimeType: "image/jpeg" };
   } catch (err) {
