@@ -47,8 +47,6 @@ export function ResultCard({
 
     if (mode === "meta" && fileData.meta) {
       const { title, keywords, description, category } = fileData.meta;
-      const filenameWithoutExt =
-        fileData.file.split(".").slice(0, -1).join(".") || fileData.file;
       let headers = [];
       let row = [];
       filename = `${platform}_${fileData.file}.csv`;
@@ -57,7 +55,7 @@ export function ResultCard({
         case "shutterstock":
           headers = ["Filename", "Description", "Keywords"];
           row = [
-            `"${filenameWithoutExt}"`,
+            `"${fileData.file}"`,
             `"${title || ""}"`,
             `"${(keywords || []).join(",")}"`,
 
@@ -67,7 +65,7 @@ export function ResultCard({
         case "freepik":
           headers = ["File name", "Title", "Keywords", "Prompt", "Base-Model"];
           row = [
-            `"${filenameWithoutExt}.jpg"`,
+            `"${fileData.file}"`,
             `"${title || ""}"`,
             `"${(keywords || []).join(",")}"`,
             `"${fileData.prompt || ""}"`,
@@ -77,7 +75,7 @@ export function ResultCard({
         case "vecteezy":
           headers = ["Filename", "Title", "Description", "Keywords"];
           row = [
-            `"${filenameWithoutExt}"`,
+            `"${fileData.file}"`,
             `"${title || ""}"`,
             `"${description || ""}"`,
             `"${(keywords || []).join(",")}"`,
@@ -87,7 +85,7 @@ export function ResultCard({
         case "adobestock":
           headers = ["Filename", "Title", "Keywords"];
           row = [
-            `"${filenameWithoutExt}"`,
+            `"${fileData.file}"`,
             `"${title || ""}"`,
             `"${(keywords || []).join(",")}"`,
           ];
