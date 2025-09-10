@@ -256,7 +256,7 @@ export default function DashboardPage() {
     let previewFile = file;
 
     // For browser-supported conversion: BMP, TIFF, GIF
-    if (["image/bmp", "image/tiff", "image/gif"].includes(file.type)) {
+    if (["image/bmp", "image/gif"].includes(file.type)) {
       try {
         previewFile = await imageCompression(file, {
           maxSizeMB: 0.06, // ~60KB
@@ -278,21 +278,37 @@ export default function DashboardPage() {
     const arr = Array.from(list || []);
     if (arr.length === 0) return;
 
-    const accepted = arr.filter((f) => ACCEPTED.includes(f.type));
-    const rejected = arr.filter((f) => !ACCEPTED.includes(f.type));
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
-    if (rejected.length) {
+    const accepted = arr.filter((f) => ACCEPTED.includes(f.type));
+    const rejectedByType = arr.filter((f) => !ACCEPTED.includes(f.type));
+    const rejectedBySize = accepted.filter((f) => f.size > MAX_FILE_SIZE);
+
+    if (rejectedByType.length > 0) {
       dispatch({
         type: "SET_ERROR_MSG",
-        payload: t("unsupportedFileType", { count: rejected.length }),
+        payload: t("unsupportedFileType", { count: rejectedByType.length }),
       });
       setTimeout(() => dispatch({ type: "SET_ERROR_MSG", payload: "" }), 3000);
     }
 
-    if (accepted.length === 0) return;
+    if (rejectedBySize.length > 0) {
+      dispatch({
+        type: "SET_ERROR_MSG",
+        payload: t("fileTooLarge", {
+          count: rejectedBySize.length,
+          size: "10MB",
+        }),
+      });
+      setTimeout(() => dispatch({ type: "SET_ERROR_MSG", payload: "" }), 3000);
+    }
+
+    const filesToProcess = accepted.filter((f) => f.size <= MAX_FILE_SIZE);
+
+    if (filesToProcess.length === 0) return;
 
     const newProcessedFiles = await Promise.all(
-      accepted.map(async (f) => ({
+      filesToProcess.map(async (f) => ({
         originalFile: f, // <-- This should be the File object
         previewUrl: await createPreview(f), // This is only for preview
         result: null,
@@ -604,6 +620,22 @@ export default function DashboardPage() {
   };
 
   const results = state.processedFiles.filter((f) => f.result);
+
+  function getKeywordColor(idx) {
+    const colors = [
+      "#F59E42",
+      "#3B82F6",
+      "#10B981",
+      "#EF4444",
+      "#6366F1",
+      "#F472B6",
+      "#FBBF24",
+      "#6EE7B7",
+      "#A78BFA",
+      "#F87171",
+    ];
+    return colors[idx % colors.length];
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col font-sans relative z-0 shadow-inner-lg">

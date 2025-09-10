@@ -45,7 +45,7 @@ function parseMetadata(text, maxKeywords) {
     : [];
 
   if (keywords.length > 0) {
-    keywords = keywords.slice(0, maxKeywords);
+    keywords = keywords.slice(0, maxKeywords); // <-- Always limit here
   }
 
   const categories = categoryMatch
@@ -80,11 +80,7 @@ async function convertFile(buffer, file, locale) {
   try {
     if (fileExtension === "eps") {
       cmd = `gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -r300 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`;
-    } else if (
-      ["png", "bmp", "tif", "tiff", "svg", "webp", "gif"].includes(
-        fileExtension
-      )
-    ) {
+    } else if (["png", "bmp", "svg", "webp", "gif"].includes(fileExtension)) {
       cmd = `magick "${tmpInput.name}" "JPEG:${tmpOutput.name}"`;
     } else {
       throw new Error(t("unsupportedFileType", locale));
