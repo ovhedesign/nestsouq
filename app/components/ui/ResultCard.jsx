@@ -68,8 +68,8 @@ export function ResultCard({
           row = [
             `"${fileData.file}"`,
             `"${title || ""}"`,
-            `"${(keywords || []).join(",")}"`,
-            `"${fileData.prompt || ""}"`,
+            `"${(fileData.prompt || "").replace(/"/g, '""')}"`,
+            `"${fileData.prompt}"`,
             `""`, // Placeholder for Base-Model
           ];
           break;

@@ -220,6 +220,17 @@ function UserDropdown({ user, userData }) {
                 )}
               </div>
             </div>
+            <div className="px-4 pb-2">
+              <a
+                href="https://wa.me/+9660534115524"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full flex items-center gap-3 px-3 py-2 text-left text-sm text-green-400 hover:bg-green-500/10 hover:text-green-300 rounded-md transition-colors"
+              >
+                <Sparkles className="w-5 h-5" />
+                <span>Contact Support</span>
+              </a>
+            </div>
             <div className="p-2">
               <button
                 onClick={googleSignOut}
