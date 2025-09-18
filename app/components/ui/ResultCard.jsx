@@ -84,29 +84,30 @@ export function ResultCard({
         "";
 
       const row = headers.map((h) => {
-        switch (h) {
-          case "Filename":
+        const key = (h || "").toLowerCase();
+        switch (key) {
+          case "filename":
             return `"${filenameWithoutExt || fileData.file || ""}"`;
-          case "File name":
+          case "file name":
             return `"${filenameWithoutExt || fileData.file || ""}.jpg"`;
-          case "Title":
+          case "title":
             return `"${(fileData.meta.title || "").replace(/"/g, '""')}"`;
-          case "Description":
+          case "description":
             return `"${(fileData.meta.description || "").replace(/"/g, '""')}"`;
-          case "Keywords":
+          case "keywords":
             return `"${(fileData.meta.keywords || [])
               .join(",")
               .replace(/"/g, '""')}"`;
-          case "Categories":
+          case "categories":
             return `"${(fileData.meta.category || [])
               .join(",")
               .replace(/"/g, '""')}"`;
-          case "Editorial":
-          case "Mature content":
+          case "editorial":
+          case "mature content":
           case "illustration":
-          case "Base-Model":
+          case "base-model":
             return '""';
-          case "Prompt":
+          case "prompt":
             return `"${(fileData.prompt || "").replace(/"/g, '""')}"`;
           case "oldfilename":
             return `"${fileData.file || ""}"`;

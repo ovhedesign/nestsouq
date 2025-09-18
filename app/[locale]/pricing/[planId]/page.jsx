@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/hooks";
@@ -11,6 +11,8 @@ const PlanPage = () => {
   const [plan, setPlan] = useState(null);
   const [allPlans, setAllPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const captureCalledRef = useRef(false);
 
   const { planId } = useParams();
   const router = useRouter();
@@ -58,32 +60,65 @@ const PlanPage = () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ planId: plan.planId }),
     });
+
+    if (!res.ok) {
+      const err = await res.text();
+      console.error("create-order failed:", res.status, err);
+      throw new Error("Unable to create PayPal order");
+    }
+
     const data = await res.json();
+    if (!data?.orderID) {
+      console.error("create-order returned no orderID:", data);
+      throw new Error("Invalid order response from server");
+    }
     return data.orderID;
   };
 
   const onApprove = async (data) => {
+    // Prevent double processing
+    if (captureCalledRef.current) return;
+    captureCalledRef.current = true;
+    setIsProcessing(true);
+
     try {
       const res = await fetch("/api/paypal/capture-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderID: data.orderID,
-          uid: user.id,
+          uid: user?.id,
           planId: plan.planId,
-          planPrice: plan.price,
-          planDurationDays: plan.durationDays,
         }),
       });
 
-      if (res.ok) router.push("/");
-      else {
-        const errorData = await res.json();
-        console.error("Failed to capture order:", errorData.message);
+      if (res.ok) {
+        router.push("/");
+        return;
       }
+
+      const errorData = await res.json().catch(() => ({}));
+      console.error("Failed to capture order:", errorData);
+      throw new Error(errorData?.message || "Capture failed");
     } catch (error) {
       console.error("Error capturing order:", error);
+      // reset so user can try again
+      captureCalledRef.current = false;
+      setIsProcessing(false);
+      alert("Payment failed. Please try again.");
     }
+  };
+
+  const onCancel = () => {
+    captureCalledRef.current = false;
+    setIsProcessing(false);
+  };
+
+  const onError = (err) => {
+    console.error("PayPal error:", err);
+    captureCalledRef.current = false;
+    setIsProcessing(false);
+    alert("PayPal error occurred. Please try again.");
   };
 
   if (authLoading || loading) {
@@ -166,13 +201,15 @@ const PlanPage = () => {
           ) : (
             <PayPalScriptProvider
               options={{
-                "client-id": process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID,
+                "client-id": process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "",
                 currency: "USD",
               }}
             >
               <PayPalButtons
                 createOrder={createOrder}
                 onApprove={onApprove}
+                onError={onError}
+                onCancel={onCancel}
                 style={{
                   layout: "vertical",
                   color: "gold",

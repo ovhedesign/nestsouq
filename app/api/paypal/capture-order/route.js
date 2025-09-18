@@ -2,30 +2,37 @@ import clientPromise from "@/lib/mongodb";
 
 export async function POST(req) {
   try {
-    const { orderID, uid, planId } = await req.json(); // Removed planPrice and planDurationDays from here
+    const { orderID, uid, planId } = await req.json();
 
-    // Fetch plan details from MongoDB to get price and duration
     const client = await clientPromise;
     const db = client.db("nestsouq");
-    const plan = await db.collection("plans").findOne({ planId: { $regex: new RegExp(planId, "i") } });
+    const plan = await db
+      .collection("plans")
+      .findOne({ planId: { $regex: new RegExp(planId, "i") } });
 
     if (!plan) {
-      return new Response(JSON.stringify({ success: false, error: "Plan not found" }), {
-        status: 404,
-      });
+      return new Response(
+        JSON.stringify({ success: false, error: "Plan not found" }),
+        {
+          status: 404,
+        }
+      );
     }
 
     const planPrice = plan.price;
-    const planDurationDays = plan.durationDays || 30; // Default to 30 days if not specified in plan
+    const planDurationDays = plan.durationDays || 30;
 
-    // PayPal auth
     const auth = Buffer.from(
       `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
     ).toString("base64");
 
-    // Capture the order
+    const endpointBase =
+      process.env.PAYPAL_ENV === "live"
+        ? "https://api-m.paypal.com"
+        : "https://api-m.sandbox.paypal.com";
+
     const res = await fetch(
-      `https://api-m.sandbox.paypal.com/v2/checkout/orders/${orderID}/capture`,
+      `${endpointBase}/v2/checkout/orders/${orderID}/capture`,
       {
         method: "POST",
         headers: {
@@ -37,9 +44,17 @@ export async function POST(req) {
 
     const data = await res.json();
 
-    if (data.status === "COMPLETED") {
+    if (!res.ok) {
+      console.error("PayPal capture failed:", res.status, data);
+      return new Response(JSON.stringify({ success: false, error: data }), {
+        status: res.status || 400,
+      });
+    }
+
+    // PayPal returns status 'COMPLETED' for captured orders
+    if (data.status === "COMPLETED" || data.status === "COMPLETED") {
       const expireDate = new Date();
-      expireDate.setDate(expireDate.getDate() + planDurationDays); // e.g., 30 days
+      expireDate.setDate(expireDate.getDate() + planDurationDays);
 
       await db.collection("user_data").updateOne(
         { uid },
@@ -54,8 +69,9 @@ export async function POST(req) {
               capturedAt: new Date(),
             },
           },
-          $inc: { credits: plan.imageCredits }, // Increment credits by imageCredits from the plan
-        }
+          $inc: { credits: plan.imageCredits || 0 },
+        },
+        { upsert: true }
       );
 
       return new Response(JSON.stringify({ success: true }), { status: 200 });
