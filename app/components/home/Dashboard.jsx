@@ -534,95 +534,119 @@ export default function DashboardPage() {
       dispatch({ type: "SET_ERROR_MSG", payload: "" });
     }, 3000);
   };
+  // Platform -> CSV headers mapping (keep in sync with ResultCard)
+  const PLATFORM_HEADERS = {
+    alamy: ["Filename", "Title", "Description", "Keywords"],
+    dreamstime: ["Filename", "Title", "Description", "Keywords"],
+    depositphotos: ["Filename", "Title", "Description", "Keywords"],
+    vecteezy: ["Filename", "Title", "Description", "Keywords"],
+    freepik: ["File name", "Title", "Keywords", "Prompt", "Base-Model"],
+    "123rf": [
+      "oldfilename",
+      "123rf_filename",
+      "description",
+      "keywords",
+      "country",
+    ],
+    shutterstock: [
+      "Filename",
+      "Description",
+      "Keywords",
+      "Categories",
+      "Editorial",
+      "Mature content",
+      "illustration",
+    ],
+    adobestock: ["Filename", "Title", "Keywords"],
+    default: ["Filename", "Title", "Keywords", "Description"],
+  };
+
   const downloadCsv = () => {
     const results = state.processedFiles.filter((f) => f.result);
     if (results.length === 0) return;
 
-    const { platform } = state;
-    let headers = [];
-    let rows = [];
-
     if (state.mode === "prompt") {
-      headers = ["Prompt"];
-      rows = results.map((file) => [`"${file.result.prompt}"`]);
-    } else {
-      if (platform === "shutterstock") {
-        // This block is specifically for Shutterstock and will only generate the 3 specified columns.
-        headers = ["Filename", "Description", "Keywords"];
-        rows = results.map((file) => {
-          const filenameWithoutExt =
-            file.result.file.split(".").slice(0, -1).join(".") ||
-            file.result.file;
-          return [
-            `"${filenameWithoutExt}"`,
-            `"${file.result.meta?.description || ""}"`,
-            `"${(file.result.meta?.keywords || []).join(",")}"`,
-          ];
-        });
-      } else if (platform === "freepik") {
-        headers = ["File name", "Title", "Keywords", "Prompt", "Base-Model"];
-        rows = results.map((file) => {
-          const r = file.result;
-          const filenameWithoutExt =
-            r.file.split(".").slice(0, -1).join(".") || r.file;
-          return [
-            `"${filenameWithoutExt}.jpg"`,
-            `"${r.meta?.title || ""}"`,
-            `"${(r.meta?.keywords || []).join(",")}"`,
-            `"${r.prompt || ""}"`,
-            '""', // Placeholder for Base-Model
-          ];
-        });
-      } else if (platform === "vecteezy") {
-        headers = ["Filename", "Title", "Description", "Keywords"];
-        rows = results.map((file) => {
-          const r = file.result;
-          const filenameWithoutExt =
-            r.file.split(".").slice(0, -1).join(".") || r.file;
-          return [
-            `"${filenameWithoutExt}"`,
-            `"${r.meta?.title || ""}"`,
-            `"${r.meta?.description || ""}"`,
-            `"${(r.meta?.keywords || []).join(",")}"`,
-          ];
-        });
-      } else if (platform === "adobestock") {
-        headers = ["Filename", "Title", "Keywords"];
-        rows = results.map((file) => {
-          const r = file.result;
-          const filenameWithoutExt =
-            r.file.split(".").slice(0, -1).join(".") || r.file;
-          return [
-            `"${filenameWithoutExt}"`,
-            `"${r.meta?.title || ""}"`,
-            `"${(r.meta?.keywords || []).join(",")}"`,
-          ];
-        });
-      } else {
-        // Default case to prevent unwanted fields
-        headers = ["Filename", "Title", "Keywords", "Description"];
-        rows = results.map((file) => {
-          const r = file.result;
-          return [
-            `"${r.file}"`,
-            `"${r.meta?.title || ""}"`,
-            `"${(r.meta?.keywords || []).join(",")}"`,
-            `"${r.meta?.description || ""}"`,
-          ];
-        });
-      }
+      const headers = ["Prompt"];
+      const rows = results.map((file) => [
+        `"${(file.result.prompt || "").replace(/"/g, '""')}"`,
+      ]);
+      const csv = [headers.join(","), ...rows.map((r) => r.join(","))].join(
+        "\n"
+      );
+      const BOM = "\uFEFF";
+      const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${state.platform || "results"}_prompts.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      return;
     }
+
+    const key = (state.platform || "default").toLowerCase();
+    const headers = PLATFORM_HEADERS[key] || PLATFORM_HEADERS["default"];
+
+    const rows = results.map((file) => {
+      const r = file.result || {};
+      const filenameWithoutExt =
+        (r.file && r.file.split(".").slice(0, -1).join(".")) ||
+        r.file ||
+        file.originalFile?.name ||
+        "";
+
+      return headers.map((h) => {
+        switch (h) {
+          case "Filename":
+            return `"${filenameWithoutExt || ""}"`;
+          case "File name":
+            return `"${
+              (filenameWithoutExt || "").endsWith(".jpg")
+                ? filenameWithoutExt
+                : `${filenameWithoutExt}.jpg`
+            }"`;
+          case "Title":
+            return `"${(r.meta?.title || "").replace(/"/g, '""')}"`;
+          case "Description":
+            return `"${(r.meta?.description || "").replace(/"/g, '""')}"`;
+          case "Keywords":
+            return `"${(r.meta?.keywords || [])
+              .join(",")
+              .replace(/"/g, '""')}"`;
+          case "Categories":
+            return `"${(r.meta?.category || [])
+              .join(",")
+              .replace(/"/g, '""')}"`;
+          case "Editorial":
+          case "Mature content":
+          case "illustration":
+          case "Base-Model":
+            return '""';
+          case "Prompt":
+            return `"${(r.prompt || "").replace(/"/g, '""')}"`;
+          case "oldfilename":
+            return `"${r.file || filenameWithoutExt || ""}"`;
+          case "123rf_filename":
+            return `"${filenameWithoutExt || r.file || ""}"`;
+          case "country":
+            return '""';
+          default:
+            return '""';
+        }
+      });
+    });
 
     const csv = [headers.join(","), ...rows.map((row) => row.join(","))].join(
       "\n"
     );
-
     const BOM = "\uFEFF";
     const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${platform}_results.csv`;
+    a.download = `${state.platform || "results"}_results.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -779,9 +803,14 @@ export default function DashboardPage() {
                     { id: "shutterstock", name: t("Shutterstock") },
                     { id: "freepik", name: t("Freepik") },
                     { id: "vecteezy", name: t("Vecteezy") },
-                    { id: "adobestock", name: t("adobeStock") }, // Added AdobeStock
+                    { id: "adobestock", name: t("adobeStock") }, // Adobe Stock
+                    { id: "alamy", name: t("Alamy") },
+                    { id: "dreamstime", name: t("Dreamstime") },
+                    { id: "depositphotos", name: t("Depositphotos") },
+                    { id: "123rf", name: t("123Rf") },
                   ].map((p) => (
                     <Button
+                      key={p.id}
                       onClick={() =>
                         dispatch({ type: "SET_PLATFORM", payload: p.id })
                       }

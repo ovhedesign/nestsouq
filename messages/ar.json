@@ -46,7 +46,11 @@
     "Freepik": "فري بيك",
     "Vecteezy": "فيكتيزي",
     "adobeStock": "أدوبي ستوك",
-    "platformSelectDisabledTooltip": "لا يمكنك تغيير المنصة بعد معالجة الصور."
+    "platformSelectDisabledTooltip": "لا يمكنك تغيير المنصة بعد معالجة الصور.",
+    "Alamy": "Alamy",
+    "Dreamstime": "Dreamstime",
+    "Depositphotos": "Depositphotos",
+    "123Rf": "123RF"
   },
   "Login": {
     "welcomeTo": "أهلاً بك في",
@@ -89,7 +93,6 @@
     "premiumDescription": "5,000 صورة",
     "premiumFeature1": "وصول كامل",
     "premiumFeature2": "API سريع وتزامن أعلى",
-    "choosePremiumButton": "اختر المميزة",
     "freeTrialPeriod": "",
     "basicPeriod": "/شهر",
     "standardPeriod": "/شهر (متكرر)",

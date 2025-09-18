@@ -44,70 +44,82 @@ export function ResultCard({
 
   const handleDownloadCSV = (platform) => {
     let csvContent = "";
-    let filename;
+    const key = (platform || "default").toLowerCase();
 
-    if (mode === "meta" && fileData.meta) {
-      const { title, keywords, description, category } = fileData.meta;
-      let headers = [];
-      let row = [];
-      filename = `${platform}_${fileData.file}.csv`;
+    const PLATFORM_HEADERS = {
+      alamy: ["Filename", "Title", "Description", "Keywords"],
+      dreamstime: ["Filename", "Title", "Description", "Keywords"],
+      depositphotos: ["Filename", "Title", "Description", "Keywords"],
+      vecteezy: ["Filename", "Title", "Description", "Keywords"],
+      freepik: ["File name", "Title", "Keywords", "Prompt", "Base-Model"],
+      "123rf": [
+        "oldfilename",
+        "123rf_filename",
+        "description",
+        "keywords",
+        "country",
+      ],
+      shutterstock: [
+        "Filename",
+        "Description",
+        "Keywords",
+        "Categories",
+        "Editorial",
+        "Mature content",
+        "illustration",
+      ],
+      adobestock: ["Filename", "Title", "Keywords"],
+      default: ["Filename", "Title", "Keywords", "Description"],
+    };
 
-      switch (platform) {
-        case "shutterstock":
-          headers = ["Filename", "Description", "Keywords"];
-          row = [
-            `"${fileData.file}"`,
-            `"${title || ""}"`,
-            `"${(keywords || []).join(",")}"`,
-
-            `""`,
-          ];
-          break;
-        case "freepik":
-          headers = ["File name", "Title", "Keywords", "Prompt", "Base-Model"];
-          row = [
-            `"${fileData.file}"`,
-            `"${title || ""}"`,
-            `"${(fileData.prompt || "").replace(/"/g, '""')}"`,
-            `"${fileData.prompt}"`,
-            `""`, // Placeholder for Base-Model
-          ];
-          break;
-        case "vecteezy":
-          headers = ["Filename", "Title", "Description", "Keywords"];
-          row = [
-            `"${fileData.file}"`,
-            `"${title || ""}"`,
-            `"${description || ""}"`,
-            `"${(keywords || []).join(",")}"`,
-            `"Photo"`,
-          ];
-          break;
-        case "adobestock":
-          headers = ["Filename", "Title", "Keywords"];
-          row = [
-            `"${fileData.file}"`,
-            `"${title || ""}"`,
-            `"${(keywords || []).join(",")}"`,
-          ];
-          break;
-        default:
-          headers = ["Title", "Keywords", "Description", "Category"];
-          row = [
-            `"${title || ""}"`,
-            `"${(keywords || []).join(", ")}"`,
-            `"${description || ""}"`,
-            `"${(category || []).join(", ")}"`,
-          ];
-          filename = `${fileData.file}.csv`;
-          break;
-      }
-      csvContent = `${headers.join(",")}\n${row.join(",")}`;
-    } else if (mode === "prompt" && fileData.prompt) {
+    if (mode === "prompt" && fileData.prompt) {
       const headers = ["Prompt"];
-      const row = [`"${fileData.prompt}"`];
+      const row = [`"${(fileData.prompt || "").replace(/"/g, '""')}"`];
       csvContent = `${headers.join(",")}\n${row.join(",")}`;
-      filename = `prompt_${fileData.file}.csv`;
+    } else if (mode === "meta" && fileData.meta) {
+      const headers = PLATFORM_HEADERS[key] || PLATFORM_HEADERS["default"];
+      const filenameWithoutExt =
+        (fileData.file && fileData.file.split(".").slice(0, -1).join(".")) ||
+        fileData.file ||
+        "";
+
+      const row = headers.map((h) => {
+        switch (h) {
+          case "Filename":
+            return `"${filenameWithoutExt || fileData.file || ""}"`;
+          case "File name":
+            return `"${filenameWithoutExt || fileData.file || ""}.jpg"`;
+          case "Title":
+            return `"${(fileData.meta.title || "").replace(/"/g, '""')}"`;
+          case "Description":
+            return `"${(fileData.meta.description || "").replace(/"/g, '""')}"`;
+          case "Keywords":
+            return `"${(fileData.meta.keywords || [])
+              .join(",")
+              .replace(/"/g, '""')}"`;
+          case "Categories":
+            return `"${(fileData.meta.category || [])
+              .join(",")
+              .replace(/"/g, '""')}"`;
+          case "Editorial":
+          case "Mature content":
+          case "illustration":
+          case "Base-Model":
+            return '""';
+          case "Prompt":
+            return `"${(fileData.prompt || "").replace(/"/g, '""')}"`;
+          case "oldfilename":
+            return `"${fileData.file || ""}"`;
+          case "123rf_filename":
+            return `"${filenameWithoutExt || fileData.file || ""}"`;
+          case "country":
+            return '""';
+          default:
+            return '""';
+        }
+      });
+
+      csvContent = `${headers.join(",")}\n${row.join(",")}`;
     }
 
     if (!csvContent) return;
@@ -117,6 +129,7 @@ export function ResultCard({
     });
     const link = document.createElement("a");
     if (link.download !== undefined) {
+      const filename = `${platform || "result"}_${fileData.file}.csv`;
       link.setAttribute("href", URL.createObjectURL(blob));
       link.setAttribute("download", filename);
       link.style.visibility = "hidden";

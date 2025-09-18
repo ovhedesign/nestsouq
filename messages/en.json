@@ -50,7 +50,11 @@
     "Freepik": "Freepik",
     "Vecteezy": "Vecteezy",
     "platformSelectDisabledTooltip": "You can't change the platform after processing images.",
-    "filesProcessedSuccess": "Files processed successfully!"
+    "filesProcessedSuccess": "Files processed successfully!",
+    "Alamy": "Alamy",
+    "Dreamstime": "Dreamstime",
+    "Depositphotos": "Depositphotos",
+    "123Rf": "123RF"
   },
   "Login": {
     "welcomeTo": "Welcome to",
@@ -93,7 +97,6 @@
     "premiumDescription": "5,000 images",
     "premiumFeature1": "Full access",
     "premiumFeature2": "Fast API & higher concurrency",
-    "choosePremiumButton": "Choose Premium",
     "freeTrialPeriod": "",
     "basicPeriod": "/month",
     "standardPeriod": "/month (recurring)",
