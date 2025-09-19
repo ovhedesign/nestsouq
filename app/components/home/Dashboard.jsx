@@ -647,57 +647,136 @@ export default function DashboardPage() {
       return "jpg";
     };
 
+    const escapeCell = (val) =>
+      `"${(val === null || val === undefined ? "" : String(val))
+        .replace(/"/g, '""')
+        .replace(/\r?\n/g, " ")}"`;
+
+    const guessKeywordsFromPrompt = (prompt) => {
+      if (!prompt) return ["image"];
+      // pick top unique words excluding small common words
+      const stop = new Set([
+        "the",
+        "and",
+        "a",
+        "an",
+        "of",
+        "in",
+        "on",
+        "with",
+        "for",
+        "to",
+        "is",
+        "are",
+        "by",
+        "from",
+      ]);
+      const words = prompt
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((w) => w && !stop.has(w))
+        .slice(0, 8);
+      return words.length ? words : ["image"];
+    };
+
     return results.map((file) => {
       const r = file.result || {};
       const filenameSource = r.file || file.originalFile?.name || "";
       const filenameWithoutExt =
         (filenameSource && filenameSource.split(".").slice(0, -1).join(".")) ||
         filenameSource ||
-        "";
+        "image";
       const ext = getExtFromName(filenameSource);
 
-      // return array of cells matching headers order
+      // Attempt to gather fallback values from various places
+      const titleFallback =
+        r.meta?.title ||
+        r.title ||
+        filenameWithoutExt ||
+        (r.prompt ? r.prompt.split(".")[0].slice(0, 40) : "Untitled");
+      const descriptionFallback =
+        r.meta?.description ||
+        r.description ||
+        r.prompt ||
+        `${titleFallback} - no description`;
+      const keywordsArr =
+        (Array.isArray(r.meta?.keywords) &&
+          r.meta.keywords.length &&
+          r.meta.keywords) ||
+        (Array.isArray(r.keywords) && r.keywords.length && r.keywords) ||
+        (r.prompt ? guessKeywordsFromPrompt(r.prompt) : ["image"]);
+      const categoriesFallback =
+        (r.meta?.category &&
+          (Array.isArray(r.meta.category)
+            ? r.meta.category.join(",")
+            : r.meta.category)) ||
+        r.category ||
+        "General";
+      const baseModelFallback =
+        r.meta?.baseModel || r.baseModel || r.model || "Unknown";
+      const editorialFlag = r.meta?.editorial || r.editorial || false;
+      const matureFlag = r.meta?.mature || r.mature || false;
+      const illustrationFlag = r.meta?.illustration || r.illustration || false;
+      const countryFallback = r.meta?.country || r.country || "Unknown";
+      const promptFallback = r.prompt || r.meta?.prompt || "";
+
+      // Build cells matching headers order and always return a non-empty value
       return headers.map((h) => {
         switch (h) {
-          case "Filename":
-            return `"${
-              filenameWithoutExt ? `${filenameWithoutExt}.${ext}` : ""
-            }"`;
-          case "File name":
-            return `"${
-              (filenameWithoutExt || "").endsWith(`.${ext}`)
-                ? filenameWithoutExt
-                : `${filenameWithoutExt || ""}.${ext}`
-            }"}`;
+          case "Filename": {
+            const name = filenameWithoutExt
+              ? `${filenameWithoutExt}.${ext}`
+              : `image.${ext}`;
+            return escapeCell(name);
+          }
+          case "File name": {
+            const name = filenameWithoutExt
+              ? `${filenameWithoutExt}.${ext}`
+              : `image.${ext}`;
+            return escapeCell(name);
+          }
           case "Title":
-            return `"${(r.meta?.title || "").replace(/"/g, '""')}"`;
+            return escapeCell(titleFallback || "Untitled");
           case "Description":
-            return `"${(r.meta?.description || "").replace(/"/g, '""')}"`;
+            return escapeCell(descriptionFallback || "No description");
           case "Keywords":
-            return `"${(r.meta?.keywords || [])
-              .join(",")
-              .replace(/"/g, '""')}"`;
+            return escapeCell((keywordsArr || ["image"]).join(", "));
           case "Categories":
-            return `"${(r.meta?.category || [])
-              .join(",")
-              .replace(/"/g, '""')}"`;
+            return escapeCell(categoriesFallback || "General");
           case "Editorial":
+            return escapeCell(editorialFlag ? "Yes" : "No");
           case "Mature content":
+            return escapeCell(matureFlag ? "Yes" : "No");
           case "illustration":
+            return escapeCell(illustrationFlag ? "Yes" : "No");
           case "Base-Model":
-            return '""';
+            return escapeCell(baseModelFallback);
           case "Prompt":
-            return `"${(r.prompt || "").replace(/"/g, '""')}"`;
+            return escapeCell(
+              promptFallback || descriptionFallback || titleFallback
+            );
           case "oldfilename":
-            return `"${r.file || filenameSource || ""}"`;
+            return escapeCell(r.file || filenameSource || `image.${ext}`);
           case "123rf_filename":
-            return `"${
-              filenameWithoutExt ? `${filenameWithoutExt}.${ext}` : ""
-            }"`;
+            return escapeCell(
+              filenameWithoutExt
+                ? `${filenameWithoutExt}.${ext}`
+                : `image.${ext}`
+            );
           case "country":
-            return '""';
+            return escapeCell(countryFallback);
           default:
-            return '""';
+            // For any unexpected header, try to map common keys, otherwise "N/A"
+            const key = h.toLowerCase().replace(/\s+/g, "_");
+            const fallback =
+              r.meta?.[key] ||
+              r[key] ||
+              r.meta?.[h] ||
+              r[h] ||
+              titleFallback ||
+              "N/A";
+            return escapeCell(fallback);
         }
       });
     });

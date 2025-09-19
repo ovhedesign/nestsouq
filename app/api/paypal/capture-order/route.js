@@ -64,6 +64,28 @@ export async function POST(req) {
     const planPrice = plan.price;
     const planDurationDays = plan.durationDays || 30;
 
+    // Determine credits to add: check multiple possible field names, fall back to sensible default
+    let creditsToAdd =
+      Number(
+        plan.imageCredits ??
+          plan.credits ??
+          plan.imageCredit ??
+          plan.credit ??
+          plan.totalCredits ??
+          0
+      ) || 0;
+
+    // If still zero, fallback: use price as a proxy (1 credit per currency unit) to avoid giving 0 credits
+    if (!creditsToAdd || creditsToAdd <= 0) {
+      const priceNum = Number(planPrice) || 0;
+      creditsToAdd = priceNum > 0 ? Math.max(1, Math.floor(priceNum)) : 1;
+      console.warn(
+        `Plan ${plan.planId} had no explicit credits field. Falling back to creditsToAdd=${creditsToAdd}`
+      );
+    }
+
+    console.log("Credits to add for plan:", plan.planId, creditsToAdd);
+
     const endpointBase =
       process.env.PAYPAL_ENV === "live"
         ? "https://api-m.paypal.com"
@@ -113,23 +135,31 @@ export async function POST(req) {
         );
       }
 
-      await db.collection("user_data").updateOne(
-        filter,
-        {
-          $set: {
-            isPremium: true,
-            expireDate,
-            paymentInfo: {
-              orderID,
-              planId,
-              amount: planPrice,
-              capturedAt: new Date(),
-            },
+      const updateDoc = {
+        $set: {
+          isPremium: true,
+          expireDate,
+          paymentInfo: {
+            orderID,
+            planId,
+            amount: planPrice,
+            capturedAt: new Date(),
           },
-          $inc: { credits: plan.imageCredits || 0 },
         },
-        { upsert: true }
-      );
+        $inc: { credits: Number(creditsToAdd) },
+      };
+
+      // Do not upsert blindly if that can create incorrect docs; keep upsert true only if desired
+      const updateRes = await db
+        .collection("user_data")
+        .updateOne(filter, updateDoc, { upsert: false });
+
+      console.log("PayPal capture - update result:", {
+        matchedCount: updateRes.matchedCount,
+        modifiedCount: updateRes.modifiedCount,
+        creditsAdded: creditsToAdd,
+        filter,
+      });
 
       return new Response(JSON.stringify({ success: true }), { status: 200 });
     }
