@@ -64,23 +64,36 @@ export async function POST(req) {
     const planPrice = plan.price;
     const planDurationDays = plan.durationDays || 30;
 
-    // Determine credits to add: check multiple possible field names, fall back to sensible default
-    let creditsToAdd =
-      Number(
-        plan.imageCredits ??
-          plan.credits ??
-          plan.imageCredit ??
-          plan.credit ??
-          plan.totalCredits ??
-          0
-      ) || 0;
+    // Determine credits to add
+    let creditsToAdd = 0;
 
-    // If still zero, fallback: use price as a proxy (1 credit per currency unit) to avoid giving 0 credits
-    if (!creditsToAdd || creditsToAdd <= 0) {
+    // Try to parse credits from the description field
+    if (plan.description) {
+      const match = plan.description.match(/(\d{1,3}(,\d{3})*|\d+)/);
+      if (match) {
+        creditsToAdd = parseInt(match[0].replace(/,/g, ''), 10);
+      }
+    }
+
+    // If parsing fails, fall back to other fields
+    if (creditsToAdd === 0) {
+      creditsToAdd =
+        Number(
+          plan.imageCredits ??
+            plan.credits ??
+            plan.imageCredit ??
+            plan.credit ??
+            plan.totalCredits ??
+            0
+        ) || 0;
+    }
+
+    // If still zero, fallback: use price as a proxy
+    if (creditsToAdd === 0) {
       const priceNum = Number(planPrice) || 0;
       creditsToAdd = priceNum > 0 ? Math.max(1, Math.floor(priceNum)) : 1;
       console.warn(
-        `Plan ${plan.planId} had no explicit credits field. Falling back to creditsToAdd=${creditsToAdd}`
+        `Plan ${plan.planId} had no explicit credits field and parsing description failed. Falling back to price proxy: creditsToAdd=${creditsToAdd}`
       );
     }
 
