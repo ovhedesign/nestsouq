@@ -289,7 +289,7 @@ export default function DashboardPage() {
     const arr = Array.from(list || []);
     if (arr.length === 0) return;
 
-    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+    const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB
 
     const accepted = arr.filter((f) => ACCEPTED.includes(f.type));
     const rejected = arr.filter((f) => !ACCEPTED.includes(f.type));
@@ -318,7 +318,7 @@ export default function DashboardPage() {
         type: "SET_ERROR_MSG",
         payload: t("fileTooLarge", {
           count: rejectedBySize.length,
-          size: "10MB",
+          size: "50MB",
         }),
       });
       setTimeout(() => dispatch({ type: "SET_ERROR_MSG", payload: "" }), 3000);
@@ -681,6 +681,74 @@ export default function DashboardPage() {
     ];
     return colors[idx % colors.length];
   }
+
+  // Helper to build CSV rows (place after processFiles or near other helpers
+  const buildCsvRows = (results, headers) => {
+    const getExtFromName = (name) => {
+      if (!name) return "jpg";
+      const parts = name.split(".");
+      if (parts.length > 1) {
+        const ext = parts.pop().toLowerCase();
+        if (ext.length >= 2 && ext.length <= 5) return ext;
+      }
+      return "jpg";
+    };
+
+    return results.map((file) => {
+      const r = file.result || {};
+      const filenameSource = r.file || file.originalFile?.name || "";
+      const filenameWithoutExt =
+        (filenameSource && filenameSource.split(".").slice(0, -1).join(".")) ||
+        filenameSource ||
+        "";
+      const ext = getExtFromName(filenameSource);
+
+      // return array of cells matching headers order
+      return headers.map((h) => {
+        switch (h) {
+          case "Filename":
+            return `"${
+              filenameWithoutExt ? `${filenameWithoutExt}.${ext}` : ""
+            }"`;
+          case "File name":
+            return `"${
+              (filenameWithoutExt || "").endsWith(`.${ext}`)
+                ? filenameWithoutExt
+                : `${filenameWithoutExt || ""}.${ext}`
+            }"}`;
+          case "Title":
+            return `"${(r.meta?.title || "").replace(/"/g, '""')}"`;
+          case "Description":
+            return `"${(r.meta?.description || "").replace(/"/g, '""')}"`;
+          case "Keywords":
+            return `"${(r.meta?.keywords || [])
+              .join(",")
+              .replace(/"/g, '""')}"`;
+          case "Categories":
+            return `"${(r.meta?.category || [])
+              .join(",")
+              .replace(/"/g, '""')}"`;
+          case "Editorial":
+          case "Mature content":
+          case "illustration":
+          case "Base-Model":
+            return '""';
+          case "Prompt":
+            return `"${(r.prompt || "").replace(/"/g, '""')}"`;
+          case "oldfilename":
+            return `"${r.file || filenameSource || ""}"`;
+          case "123rf_filename":
+            return `"${
+              filenameWithoutExt ? `${filenameWithoutExt}.${ext}` : ""
+            }"`;
+          case "country":
+            return '""';
+          default:
+            return '""';
+        }
+      });
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col font-sans relative z-0 shadow-inner-lg">

@@ -72,24 +72,42 @@ export function ResultCard({
       default: ["Filename", "Title", "Keywords", "Description"],
     };
 
+    const getExtFromName = (name) => {
+      if (!name) return "jpg";
+      const parts = name.split(".");
+      if (parts.length > 1) {
+        const ext = parts.pop().toLowerCase();
+        if (ext.length >= 2 && ext.length <= 5) return ext;
+      }
+      return "jpg";
+    };
+
     if (mode === "prompt" && fileData.prompt) {
       const headers = ["Prompt"];
       const row = [`"${(fileData.prompt || "").replace(/"/g, '""')}"`];
       csvContent = `${headers.join(",")}\n${row.join(",")}`;
     } else if (mode === "meta" && fileData.meta) {
       const headers = PLATFORM_HEADERS[key] || PLATFORM_HEADERS["default"];
+      const rawName = fileData.file || "";
       const filenameWithoutExt =
-        (fileData.file && fileData.file.split(".").slice(0, -1).join(".")) ||
-        fileData.file ||
-        "";
+        (rawName && rawName.split(".").slice(0, -1).join(".")) || rawName || "";
+      const ext = getExtFromName(rawName);
 
       const row = headers.map((h) => {
         const key = (h || "").toLowerCase();
         switch (key) {
           case "filename":
-            return `"${filenameWithoutExt || fileData.file || ""}"`;
+            return `"${
+              filenameWithoutExt || rawName
+                ? `${filenameWithoutExt || rawName}.${ext}`
+                : ""
+            }"`;
           case "file name":
-            return `"${filenameWithoutExt || fileData.file || ""}.jpg"`;
+            return `"${
+              filenameWithoutExt || rawName
+                ? `${filenameWithoutExt || rawName}.${ext}`
+                : ""
+            }"`;
           case "title":
             return `"${(fileData.meta.title || "").replace(/"/g, '""')}"`;
           case "description":
@@ -110,9 +128,14 @@ export function ResultCard({
           case "prompt":
             return `"${(fileData.prompt || "").replace(/"/g, '""')}"`;
           case "oldfilename":
-            return `"${fileData.file || ""}"`;
+            // oldfilename should preserve whatever raw filename was (including extension if present)
+            return `"${rawName.replace(/"/g, '""')}"`;
           case "123rf_filename":
-            return `"${filenameWithoutExt || fileData.file || ""}"`;
+            return `"${
+              filenameWithoutExt || rawName
+                ? `${filenameWithoutExt || rawName}.${ext}`
+                : ""
+            }"`;
           case "country":
             return '""';
           default:
