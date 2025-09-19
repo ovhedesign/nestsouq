@@ -586,57 +586,10 @@ export default function DashboardPage() {
       return;
     }
 
+    // For metadata mode use buildCsvRows to ensure filenames include extensions
     const key = (state.platform || "default").toLowerCase();
     const headers = PLATFORM_HEADERS[key] || PLATFORM_HEADERS["default"];
-
-    const rows = results.map((file) => {
-      const r = file.result || {};
-      const filenameWithoutExt =
-        (r.file && r.file.split(".").slice(0, -1).join(".")) ||
-        r.file ||
-        file.originalFile?.name ||
-        "";
-
-      return headers.map((h) => {
-        switch (h) {
-          case "Filename":
-            return `"${filenameWithoutExt || ""}"`;
-          case "File name":
-            return `"${
-              (filenameWithoutExt || "").endsWith(".jpg")
-                ? filenameWithoutExt
-                : `${filenameWithoutExt}.jpg`
-            }"`;
-          case "Title":
-            return `"${(r.meta?.title || "").replace(/"/g, '""')}"`;
-          case "Description":
-            return `"${(r.meta?.description || "").replace(/"/g, '""')}"`;
-          case "Keywords":
-            return `"${(r.meta?.keywords || [])
-              .join(",")
-              .replace(/"/g, '""')}"`;
-          case "Categories":
-            return `"${(r.meta?.category || [])
-              .join(",")
-              .replace(/"/g, '""')}"`;
-          case "Editorial":
-          case "Mature content":
-          case "illustration":
-          case "Base-Model":
-            return '""';
-          case "Prompt":
-            return `"${(r.prompt || "").replace(/"/g, '""')}"`;
-          case "oldfilename":
-            return `"${r.file || filenameWithoutExt || ""}"`;
-          case "123rf_filename":
-            return `"${filenameWithoutExt || r.file || ""}"`;
-          case "country":
-            return '""';
-          default:
-            return '""';
-        }
-      });
-    });
+    const rows = buildCsvRows(results, headers);
 
     const csv = [headers.join(","), ...rows.map((row) => row.join(","))].join(
       "\n"
