@@ -1,6 +1,30 @@
 import fetch from "node-fetch";
 import clientPromise from "@/lib/mongodb";
 
+async function getPayPalAccessToken(endpointBase) {
+  const auth = Buffer.from(
+    `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
+  ).toString("base64");
+  const tokenRes = await fetch(`${endpointBase}/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${auth}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "grant_type=client_credentials",
+  });
+  const tokenData = await tokenRes.json();
+  if (!tokenRes.ok || !tokenData?.access_token) {
+    console.error(
+      "Failed to get PayPal access token:",
+      tokenRes.status,
+      tokenData
+    );
+    throw new Error("Failed to get PayPal access token");
+  }
+  return tokenData.access_token;
+}
+
 export async function POST(req) {
   try {
     const { planId } = await req.json();
@@ -21,20 +45,19 @@ export async function POST(req) {
       );
     }
 
-    const auth = Buffer.from(
-      `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
-    ).toString("base64");
-
-    const endpoint =
+    const endpointBase =
       process.env.PAYPAL_ENV === "live"
-        ? "https://api-m.paypal.com/v2/checkout/orders"
-        : "https://api-m.sandbox.paypal.com/v2/checkout/orders";
+        ? "https://api-m.paypal.com"
+        : "https://api-m.sandbox.paypal.com";
+
+    // Use OAuth token (Bearer)
+    const accessToken = await getPayPalAccessToken(endpointBase);
 
     // Create PayPal order
-    const res = await fetch(endpoint, {
+    const res = await fetch(`${endpointBase}/v2/checkout/orders`, {
       method: "POST",
       headers: {
-        Authorization: `Basic ${auth}`,
+        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

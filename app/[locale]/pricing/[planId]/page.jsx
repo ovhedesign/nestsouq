@@ -82,12 +82,17 @@ const PlanPage = () => {
     setIsProcessing(true);
 
     try {
+      // send a robust identifier: try uid/id/_id then email
+      const uidToSend = user?.uid || user?.id || user?._id || null;
+      const emailToSend = user?.email || null;
+
       const res = await fetch("/api/paypal/capture-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           orderID: data.orderID,
-          uid: user?.id,
+          uid: uidToSend,
+          email: emailToSend,
           planId: plan.planId,
         }),
       });
