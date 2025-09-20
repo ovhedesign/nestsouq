@@ -66,35 +66,43 @@ export async function POST(req) {
 
     // Determine credits to add
     let creditsToAdd = 0;
+    const priceNum = Number(planPrice) || 0;
 
-    // Try to parse credits from the description field
-    if (plan.description) {
-      const match = plan.description.match(/(\d{1,3}(,\d{3})*|\d+)/);
-      if (match) {
-        creditsToAdd = parseInt(match[0].replace(/,/g, ''), 10);
-      }
-    }
+    if (priceNum === 5) {
+      creditsToAdd = 1000;
+    } else if (priceNum === 9) {
+      creditsToAdd = 2500;
+    } else if (priceNum === 15) {
+      creditsToAdd = 5000;
+    } else {
+        // Try to parse credits from the description field
+        if (plan.description) {
+          const match = plan.description.match(/(\d{1,3}(,\d{3})*|\d+)/);
+          if (match) {
+            creditsToAdd = parseInt(match[0].replace(/,/g, ''), 10);
+          }
+        }
 
-    // If parsing fails, fall back to other fields
-    if (creditsToAdd === 0) {
-      creditsToAdd =
-        Number(
-          plan.imageCredits ??
-            plan.credits ??
-            plan.imageCredit ??
-            plan.credit ??
-            plan.totalCredits ??
-            0
-        ) || 0;
-    }
+        // If parsing fails, fall back to other fields
+        if (creditsToAdd === 0) {
+          creditsToAdd =
+            Number(
+              plan.imageCredits ??
+                plan.credits ??
+                plan.imageCredit ??
+                plan.credit ??
+                plan.totalCredits ??
+                0
+            ) || 0;
+        }
 
-    // If still zero, fallback: use price as a proxy
-    if (creditsToAdd === 0) {
-      const priceNum = Number(planPrice) || 0;
-      creditsToAdd = priceNum > 0 ? Math.max(1, Math.floor(priceNum)) : 1;
-      console.warn(
-        `Plan ${plan.planId} had no explicit credits field and parsing description failed. Falling back to price proxy: creditsToAdd=${creditsToAdd}`
-      );
+        // If still zero, fallback: use price as a proxy
+        if (creditsToAdd === 0) {
+          creditsToAdd = priceNum > 0 ? Math.max(1, Math.floor(priceNum)) : 1;
+          console.warn(
+            `Plan ${plan.planId} had no explicit credits field and parsing description failed. Falling back to price proxy: creditsToAdd=${creditsToAdd}`
+          );
+        }
     }
 
     console.log("Credits to add for plan:", plan.planId, creditsToAdd);
