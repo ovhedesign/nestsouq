@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/hooks";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { FaCheck } from "react-icons/fa";
+import { Coins } from "lucide-react";
 
 const PlanPage = () => {
   const [plan, setPlan] = useState(null);
@@ -180,16 +181,27 @@ const PlanPage = () => {
           )}
 
           <div className="text-center mb-6">
-            <p className="text-5xl font-bold mb-2">
+            {/* Plan Name */}
+            <h2 className="text-3xl font-extrabold text-gray-800 mb-2">
+              {plan.name}
+            </h2>
+
+            {/* Price */}
+            <p className="text-6xl font-bold text-gray-900 mb-2">
               ${plan.price}
-              <span className="text-lg">/{plan.period || "mo"}</span>
+              <span className="text-xl text-gray-600">/{plan.period || "mo"}</span>
             </p>
-                            <p className="text-gray-700 text-sm">{plan.description}</p>
-                {plan.credits && (
-                  <p className="text-gray-700 text-sm mt-2">
-                    {plan.credits} Credits will be added
-                  </p>
-                )}
+
+            {/* Credits */}
+            {plan.credits > 0 && ( // Only show if credits are positive
+              <div className="bg-amber-100 text-amber-800 px-4 py-2 rounded-lg inline-flex items-center gap-2 mb-4 shadow-inner">
+                <Coins className="w-5 h-5" />
+                <span className="font-semibold text-lg">{plan.credits} Credits</span>
+              </div>
+            )}
+
+            {/* Description */}
+            <p className="text-gray-700 text-base mb-4">{plan.description}</p>
           </div>
 
           <ul className="grid grid-cols-1 gap-3 mb-6">
