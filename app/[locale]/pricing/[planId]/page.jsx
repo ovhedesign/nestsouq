@@ -184,7 +184,12 @@ const PlanPage = () => {
               ${plan.price}
               <span className="text-lg">/{plan.period || "mo"}</span>
             </p>
-            <p className="text-gray-700 text-sm">{plan.description}</p>
+                            <p className="text-gray-700 text-sm">{plan.description}</p>
+                {plan.credits && (
+                  <p className="text-gray-700 text-sm mt-2">
+                    {plan.credits} Credits will be added
+                  </p>
+                )}
           </div>
 
           <ul className="grid grid-cols-1 gap-3 mb-6">
