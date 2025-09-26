@@ -11,6 +11,7 @@
   "dependencies": {
     "@google/genai": "^1.15.0",
     "@google/generative-ai": "^0.24.1",
+    "@next/third-parties": "^15.5.4",
     "@paypal/react-paypal-js": "^8.8.3",
     "@radix-ui/react-tooltip": "^1.2.8",
     "browser-image-compression": "^2.0.2",

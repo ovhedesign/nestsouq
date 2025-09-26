@@ -3,6 +3,7 @@ import localFont from "next/font/local";
 import i18nConfig from "../../i18n.js";
 import "../globals.css";
 import socialImage from "./social-image.png"; // import the image
+import { GoogleAnalytics } from '@next/third-parties/google'
 
 const almarai = localFont({
   src: "../fonts/Almarai.ttf",
@@ -49,6 +50,7 @@ export default async function RootLayout({ children, params: { locale } }) {
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>
+        <GoogleAnalytics gaId="G-Q1J3L66B0V" />
       </body>
     </html>
   );
