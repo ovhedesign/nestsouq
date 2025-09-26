@@ -221,8 +221,8 @@ export const ACCEPTED = [
   "image/bmp",
   "image/gif",
   "image/webp",
-  "image/tiff", // <-- Add this
-  "image/x-eps", // <-- Add this (EPS)
-  "application/postscript", // <-- Add this (EPS)
-  "image/svg+xml", // <-- Add this (SVG)
+  "image/tiff",
+  "image/x-eps", 
+  "application/postscript", 
+  "image/svg+xml", 
 ];
