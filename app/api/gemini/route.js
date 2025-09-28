@@ -208,7 +208,11 @@ Strictly follow these requirements:
   } catch (error) {
     console.error("Error processing files:", error);
     return NextResponse.json(
-      { error: t("fileConversionFailed", "en"), details: error.message },
+      {
+        error: t("fileConversionFailed", "en"),
+        details: error.message,
+        errorStack: error.stack,
+      },
       { status: 500 }
     );
   }

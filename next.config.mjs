@@ -4,6 +4,11 @@ const withNextIntl = createNextIntlPlugin('./i18n.js');
  
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  api: {
+    bodyParser: {
+      sizeLimit: '50mb',
+    },
+  },
   async headers() {
     return [
       {

@@ -1,3 +1,4 @@
+"use client";
 export const metadata = {
   title: "Netsouq Pricing - Affordable Plans for Everyone",
   description:
