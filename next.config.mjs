@@ -4,7 +4,7 @@ const withNextIntl = createNextIntlPlugin('./i18n.js');
  
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  api: {
+  experimental: {
     bodyParser: {
       sizeLimit: '50mb',
     },
