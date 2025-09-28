@@ -50,7 +50,7 @@ export function ResultCard({
       alamy: ["Filename", "Title", "Description", "Keywords"],
       dreamstime: ["Filename", "Title", "Description", "Keywords"],
       depositphotos: ["Filename", "Title", "Description", "Keywords"],
-      vecteezy: ["Filename", "Title", "Description", "Keywords"],
+      vecteezy: ["Filename", "Title", "Description", "Keywords", "License"],
       freepik: ["File name", "Title", "Keywords", "Prompt", "Base-Model"],
       "123rf": [
         "oldfilename",
@@ -138,6 +138,8 @@ export function ResultCard({
             }"`;
           case "country":
             return '""';
+          case "license":
+            return '"pro"';
           default:
             return '""';
         }
@@ -153,7 +155,7 @@ export function ResultCard({
     });
     const link = document.createElement("a");
     if (link.download !== undefined) {
-      const filename = `${platform || "result"}_${fileData.file}.csv`;
+      const filename = `${platform}.csv`;
       link.setAttribute("href", URL.createObjectURL(blob));
       link.setAttribute("download", filename);
       link.style.visibility = "hidden";

@@ -2,8 +2,8 @@ import { NextIntlClientProvider } from "next-intl";
 import localFont from "next/font/local";
 import i18nConfig from "../../i18n.js";
 import "../globals.css";
-import socialImage from "./social-image.png"; // import the image
-import { GoogleAnalytics } from '@next/third-parties/google'
+import socialImage from "./social-image.png";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const almarai = localFont({
   src: "../fonts/Almarai.ttf",
@@ -29,19 +29,26 @@ export default async function RootLayout({ children, params: { locale } }) {
         <meta property="og:description" content={siteDescription} />
         <meta property="og:url" content={siteUrl} />
         <meta property="og:image" content={socialImage.src} />
-        {/* use imported image */}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={siteTitle} />
         <meta name="twitter:description" content={siteDescription} />
         <meta name="twitter:image" content={socialImage.src} />
-        {/* use imported image */}
         <meta name="geo.region" content="AE" />
         <meta name="geo.placename" content="Dubai" />
         <meta name="geo.position" content="25.276987;55.296249" />
-        <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+        <link
+          rel="icon"
+          type="image/png"
+          href="/favicon-96x96.png"
+          sizes="96x96"
+        />
         <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
         <link rel="shortcut icon" href="/favicon.ico" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+        <link
+          rel="apple-touch-icon"
+          sizes="180x180"
+          href="/apple-touch-icon.png"
+        />
         <meta name="apple-mobile-web-app-title" content="Nestsouq" />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
@@ -50,9 +57,7 @@ export default async function RootLayout({ children, params: { locale } }) {
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>
-        {process.env.NEXT_PUBLIC_GA_ID && (
-          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
-        )}
+        <GoogleAnalytics gaId="G-Q1J3L66B0V" />
       </body>
     </html>
   );

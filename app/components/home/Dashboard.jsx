@@ -539,7 +539,7 @@ export default function DashboardPage() {
     alamy: ["Filename", "Title", "Description", "Keywords"],
     dreamstime: ["Filename", "Title", "Description", "Keywords"],
     depositphotos: ["Filename", "Title", "Description", "Keywords"],
-    vecteezy: ["Filename", "Title", "Description", "Keywords"],
+    vecteezy: ["Filename", "Title", "Description", "Keywords", "License"],
     freepik: ["File name", "Title", "Keywords", "Prompt", "Base-Model"],
     "123rf": [
       "oldfilename",
@@ -599,7 +599,7 @@ export default function DashboardPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${state.platform || "results"}_results.csv`;
+    a.download = `${state.platform}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -766,6 +766,8 @@ export default function DashboardPage() {
             );
           case "country":
             return escapeCell(countryFallback);
+          case "License":
+            return escapeCell("pro");
           default:
             // For any unexpected header, try to map common keys, otherwise "N/A"
             const key = h.toLowerCase().replace(/\s+/g, "_");
