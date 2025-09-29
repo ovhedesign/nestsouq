@@ -10,6 +10,8 @@ const almarai = localFont({
   display: "swap",
 });
 
+export const metadata = { manifest: "/site.webmanifest" };
+
 export default async function RootLayout({ children, params: { locale } }) {
   const { messages } = await i18nConfig({ locale });
 
@@ -50,7 +52,6 @@ export default async function RootLayout({ children, params: { locale } }) {
           href="/apple-touch-icon.png"
         />
         <meta name="apple-mobile-web-app-title" content="Nestsouq" />
-        <link rel="manifest" href="/site.webmanifest" />
       </head>
 
       <body className="font-almarai" data-locale={locale}>

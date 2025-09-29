@@ -149,7 +149,7 @@ export async function POST(req) {
 
     // ---- Initialize Gemini ----
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const languageInstruction = locale === "ar" ? "in Arabic" : "in English";
 
     // ---- Prompt ----
@@ -239,7 +239,7 @@ export const ACCEPTED = [
   "image/gif",
   "image/webp",
   "image/tiff",
-  "image/x-eps", 
-  "application/postscript", 
-  "image/svg+xml", 
+  "image/x-eps",
+  "application/postscript",
+  "image/svg+xml",
 ];
