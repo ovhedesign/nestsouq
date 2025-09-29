@@ -89,7 +89,7 @@ async function convertFile(buffer, file, locale) {
     console.error("Conversion failed for file:", file.name, "Error:", err);
     // Try a simpler conversion if the first one fails, e.g., without resize
     try {
-      const fallbackCmd = `magick "${tmpInput.name}" -quality 85 "JPEG:${tmpOutput.name}"`;
+      const fallbackCmd = `magick "${tmpInput.name}" -quality 10 "JPEG:${tmpOutput.name}"`;
       await execAsync(fallbackCmd);
       const outputBuffer = await fs.promises.readFile(tmpOutput.name);
       return { buffer: outputBuffer, mimeType: "image/jpeg" };
