@@ -77,13 +77,9 @@ async function convertFile(buffer, file, locale) {
     // This ensures consistency and controls costs.
     if (fileExtension === "eps") {
       // For EPS, use Ghostscript to convert to JPEG
-      cmd = `gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -dJPEGQ=85 -r300 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`;
+      cmd = `gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -dJPEGQ=30 -r200 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`;
     } else {
-      // For all other image types (including JPG), use ImageMagick
-      // -resize '800x800>' -> resizes if larger, keeping aspect ratio
-      // -quality 85 -> sets JPEG quality
-      // -strip -> removes unnecessary metadata
-      cmd = `magick "${tmpInput.name}" -strip -resize "800x800>" -quality 85 "JPEG:${tmpOutput.name}"`;
+      cmd = `magick "${tmpInput.name}" -strip -resize "300x300>" -quality 30 "JPEG:${tmpOutput.name}"`;
     }
 
     await execAsync(cmd);
@@ -149,7 +145,7 @@ export async function POST(req) {
 
     // ---- Initialize Gemini ----
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
     const languageInstruction = locale === "ar" ? "in Arabic" : "in English";
 
     // ---- Prompt ----

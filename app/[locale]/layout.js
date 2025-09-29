@@ -10,50 +10,50 @@ const almarai = localFont({
   display: "swap",
 });
 
-export const metadata = { manifest: "/site.webmanifest" };
+const siteTitle = "NestSouq – AI Powered Image to Prompt & Metadata";
+const siteDescription =
+  "NestSouq helps Middle East creators transform images into AI prompts and metadata instantly.";
+const siteUrl = "https://nestsouq.app";
+
+export const metadata = {
+  title: siteTitle,
+  description: siteDescription,
+  manifest: "/site.webmanifest",
+  viewport: "width=device-width, initial-scale=1",
+  openGraph: {
+    type: "website",
+    title: siteTitle,
+    description: siteDescription,
+    url: siteUrl,
+    images: [socialImage.src],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteTitle,
+    description: siteDescription,
+    images: [socialImage.src],
+  },
+  other: {
+    "geo.region": "AE",
+    "geo.placename": "Dubai",
+    "geo.position": "25.276987;55.296249",
+    "apple-mobile-web-app-title": "Nestsouq",
+  },
+  icons: {
+    icon: [
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", type: "image/png", sizes: "96x96" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+};
 
 export default async function RootLayout({ children, params: { locale } }) {
   const { messages } = await i18nConfig({ locale });
 
-  const siteTitle = "NestSouq – AI Powered Image to Prompt & Metadata";
-  const siteDescription =
-    "NestSouq helps Middle East creators transform images into AI prompts and metadata instantly.";
-  const siteUrl = "https://nestsouq.app";
-
   return (
     <html lang={locale || "en"}>
-      <head>
-        <title>{siteTitle}</title>
-        <meta name="description" content={siteDescription} />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content={siteTitle} />
-        <meta property="og:description" content={siteDescription} />
-        <meta property="og:url" content={siteUrl} />
-        <meta property="og:image" content={socialImage.src} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={siteTitle} />
-        <meta name="twitter:description" content={siteDescription} />
-        <meta name="twitter:image" content={socialImage.src} />
-        <meta name="geo.region" content="AE" />
-        <meta name="geo.placename" content="Dubai" />
-        <meta name="geo.position" content="25.276987;55.296249" />
-        <link
-          rel="icon"
-          type="image/png"
-          href="/favicon-96x96.png"
-          sizes="96x96"
-        />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="shortcut icon" href="/favicon.ico" />
-        <link
-          rel="apple-touch-icon"
-          sizes="180x180"
-          href="/apple-touch-icon.png"
-        />
-        <meta name="apple-mobile-web-app-title" content="Nestsouq" />
-      </head>
-
       <body className="font-almarai" data-locale={locale}>
         <NextIntlClientProvider messages={messages}>
           {children}
