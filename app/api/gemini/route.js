@@ -66,11 +66,6 @@ function parseMetadata(text, maxKeywords) {
 // ----------- File Conversion -----------
 async function convertFile(buffer, file, locale) {
   const fileExtension = file.name?.split(".").pop()?.toLowerCase();
-  const mimeType = file.type;
-
-  if (mimeType === "image/jpeg" || ["jpg", "jpeg"].includes(fileExtension)) {
-    return { buffer, mimeType: "image/jpeg" };
-  }
 
   const tmpInput = tmp.fileSync({ postfix: `.${fileExtension}` });
   const tmpOutput = tmp.fileSync({ postfix: ".jpg" });
@@ -78,12 +73,17 @@ async function convertFile(buffer, file, locale) {
 
   let cmd;
   try {
+    // All files will be converted to JPEG, resized, and compressed.
+    // This ensures consistency and controls costs.
     if (fileExtension === "eps") {
-      cmd = `gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -r300 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`;
-    } else if (["png", "bmp", "svg", "webp", "gif"].includes(fileExtension)) {
-      cmd = `magick "${tmpInput.name}" "JPEG:${tmpOutput.name}"`;
+      // For EPS, use Ghostscript to convert to JPEG
+      cmd = `gs -dSAFER -dBATCH -dNOPAUSE -sDEVICE=jpeg -dJPEGQ=85 -r300 -sOutputFile="${tmpOutput.name}" "${tmpInput.name}"`;
     } else {
-      throw new Error(t("unsupportedFileType", locale));
+      // For all other image types (including JPG), use ImageMagick
+      // -resize '800x800>' -> resizes if larger, keeping aspect ratio
+      // -quality 85 -> sets JPEG quality
+      // -strip -> removes unnecessary metadata
+      cmd = `magick "${tmpInput.name}" -strip -resize "800x800>" -quality 85 "JPEG:${tmpOutput.name}"`;
     }
 
     await execAsync(cmd);
@@ -91,7 +91,16 @@ async function convertFile(buffer, file, locale) {
     return { buffer: outputBuffer, mimeType: "image/jpeg" };
   } catch (err) {
     console.error("Conversion failed for file:", file.name, "Error:", err);
-    throw new Error(t("fileConversionFailed", locale));
+    // Try a simpler conversion if the first one fails, e.g., without resize
+    try {
+      const fallbackCmd = `magick "${tmpInput.name}" -quality 85 "JPEG:${tmpOutput.name}"`;
+      await execAsync(fallbackCmd);
+      const outputBuffer = await fs.promises.readFile(tmpOutput.name);
+      return { buffer: outputBuffer, mimeType: "image/jpeg" };
+    } catch (fallbackErr) {
+      console.error("Fallback conversion failed:", fallbackErr);
+      throw new Error(t("fileConversionFailed", locale));
+    }
   } finally {
     tmpInput.removeCallback();
     tmpOutput.removeCallback();
@@ -140,7 +149,7 @@ export async function POST(req) {
 
     // ---- Initialize Gemini ----
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
     const languageInstruction = locale === "ar" ? "in Arabic" : "in English";
 
     // ---- Prompt ----
@@ -204,6 +213,10 @@ Strictly follow these requirements:
           : responseText || "No generated prompt available",
       rawResponse: responseText,
       credits: user.credits - 1,
+      sizeInfo: {
+        before: initialBuffer.length,
+        after: convertedBuffer.length,
+      },
     });
   } catch (error) {
     console.error("Error processing files:", error);

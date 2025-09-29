@@ -362,7 +362,14 @@ export default function DashboardPage() {
         file.type.startsWith("image/") &&
         file.type !== "application/postscript"
       ) {
-        compressedFile = await imageCompression(file, options);
+        try {
+          compressedFile = await imageCompression(file, options);
+        } catch (compressionError) {
+          console.warn(
+            `Client-side compression failed for ${file.name}, proceeding with original file. Error: ${compressionError.message}`
+          );
+          compressedFile = file; // Fallback to original file
+        }
       }
 
       const fd = new FormData();
@@ -387,6 +394,11 @@ export default function DashboardPage() {
         body: fd, // Added this line
       }); // Added this closing
       const data = await res.json(); // Parse the JSON response
+      if (data.sizeInfo) {
+        console.log(
+          `Image size before compression: ${data.sizeInfo.before} bytes, after compression: ${data.sizeInfo.after} bytes`
+        );
+      }
       if (!res.ok) {
         return {
           ok: false,
