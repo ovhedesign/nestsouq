@@ -491,14 +491,19 @@ export default function DashboardPage() {
       });
     }
 
-    for (const file of filesToProcess) {
-      const index = state.processedFiles.indexOf(file);
-      const result = await callGemini(file.originalFile, file.previewUrl);
-      dispatch({
-        type: "UPDATE_FILE_RESULT",
-        payload: { index, result },
-      });
-      // Auto scroll to results after each file is processed
+    const CONCURRENCY_LIMIT = 5;
+    for (let i = 0; i < filesToProcess.length; i += CONCURRENCY_LIMIT) {
+      const chunk = filesToProcess.slice(i, i + CONCURRENCY_LIMIT);
+      await Promise.all(
+        chunk.map(async (file) => {
+          const index = state.processedFiles.indexOf(file);
+          const result = await callGemini(file.originalFile, file.previewUrl);
+          dispatch({
+            type: "UPDATE_FILE_RESULT",
+            payload: { index, result },
+          });
+        })
+      );
       resultsContainerRef.current?.scrollIntoView({
         behavior: "smooth",
         block: "end",
