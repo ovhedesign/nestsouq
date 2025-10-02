@@ -634,6 +634,35 @@ export default function DashboardPage() {
     });
   };
 
+  const regenerateFile = async (idx) => {
+    const fileToRegenerate = state.processedFiles[idx];
+    if (!fileToRegenerate) return;
+
+    dispatch({
+      type: "UPDATE_FILE_RESULT",
+      payload: {
+        index: idx,
+        result: {
+          file: fileToRegenerate.originalFile.name,
+          ok: null,
+          meta: "Processing...",
+          engine: "gemini",
+          previewUrl: fileToRegenerate.previewUrl,
+        },
+      },
+    });
+
+    const result = await callGemini(
+      fileToRegenerate.originalFile,
+      fileToRegenerate.previewUrl
+    );
+
+    dispatch({
+      type: "UPDATE_FILE_RESULT",
+      payload: { index: idx, result },
+    });
+  };
+
   const results = state.processedFiles.filter((f) => f.result);
 
   function getKeywordColor(idx) {
@@ -1256,8 +1285,14 @@ export default function DashboardPage() {
                           )}
 
                           {hasFailed && (
-                            <div className="absolute inset-0 bg-red-900/50 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-red-900/50 flex flex-col items-center justify-center">
                               <XCircle className="w-8 h-8 text-red-400" />
+                              <Button
+                                onClick={() => regenerateFile(idx)}
+                                className="mt-2 bg-green-400 hover:bg-amber-600 text-black font-bold py-1 px-2 rounded-lg text-xs"
+                              >
+                                Regenerate
+                              </Button>
                             </div>
                           )}
                         </div>
