@@ -557,7 +557,7 @@ export default function DashboardPage() {
     dreamstime: ["Filename", "Title", "Description", "Keywords"],
     depositphotos: ["Filename", "Title", "Description", "Keywords"],
     vecteezy: ["Filename", "Title", "Description", "Keywords", "License"],
-    freepik: ["File name", "Title", "Keywords", "Prompt", "Base-Model"],
+    freepik: ["File name", "Title", "Keywords"],
     "123rf": [
       "oldfilename",
       "123rf_filename",
