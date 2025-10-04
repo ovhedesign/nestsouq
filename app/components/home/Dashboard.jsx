@@ -78,7 +78,6 @@ const cardVariants = {
 const initialState = {
   mode: "meta", // meta or prompt
   platform: "default",
-  shutterstockCategory: "Abstract",
   minTitle: 14,
   maxTitle: 20,
   minKw: 45,
@@ -96,8 +95,6 @@ function reducer(state, action) {
       return { ...state, mode: action.payload };
     case "SET_PLATFORM":
       return { ...state, platform: action.payload };
-    case "SET_SHUTTERSTOCK_CATEGORY":
-      return { ...state, shutterstockCategory: action.payload };
     case "SET_SLIDER":
       return { ...state, [action.payload.key]: action.payload.value };
     case "ADD_FILES":
@@ -416,7 +413,7 @@ export default function DashboardPage() {
       fd.append("uid", user.uid);
       fd.append("locale", currentLocale);
       if (state.platform === "shutterstock") {
-        fd.append("shutterstockCategory", state.shutterstockCategory);
+        fd.append("shutterstockCategories", JSON.stringify(shutterstockCategories));
       }
 
       const idToken = await user.getIdToken(); // Get the ID token
@@ -1012,34 +1009,7 @@ export default function DashboardPage() {
             </Card>
           </motion.div>
 
-          {state.platform === "shutterstock" && (
-            <motion.div variants={itemVariants}>
-              <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
-                <CardContent>
-                  <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                    <Download className="w-5 h-5 text-amber-400" />{" "}
-                    Shutterstock Category
-                  </h2>
-                  <select
-                    value={state.shutterstockCategory}
-                    onChange={(e) =>
-                      dispatch({
-                        type: "SET_SHUTTERSTOCK_CATEGORY",
-                        payload: e.target.value,
-                      })
-                    }
-                    className="w-full p-2 bg-gray-800 border border-gray-700 rounded-md"
-                  >
-                    {shutterstockCategories.map((cat) => (
-                      <option key={cat} value={cat}>
-                        {cat}
-                      </option>
-                    ))}
-                  </select>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
+
 
           {/* Sliders */}
           <motion.div variants={itemVariants}>
