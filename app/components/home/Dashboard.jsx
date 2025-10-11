@@ -30,6 +30,7 @@ import {
   FileText,
   Sparkles,
   CheckCheck,
+  Languages,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import LanguageSwitcher from "../ui/LanguageSwitcher";
@@ -254,9 +255,11 @@ export default function DashboardPage() {
   const router = useRouter();
   const pathname = usePathname();
   const currentLocale = pathname.split("/")[1];
+  const [generationLanguage, setGenerationLanguage] = useState(currentLocale);
   const inputRef = useRef(null);
   const resultsContainerRef = useRef(null);
   const t = useTranslations("HomePage");
+  const tLang = useTranslations("LanguageSwitcher");
 
   const shutterstockCategories = [
     "Abstract",
@@ -411,7 +414,7 @@ export default function DashboardPage() {
       fd.append("minDesc", String(state.minDesc));
       fd.append("maxDesc", String(state.maxDesc));
       fd.append("uid", user.uid);
-      fd.append("locale", currentLocale);
+      fd.append("locale", generationLanguage);
       if (state.platform === "shutterstock") {
         fd.append("shutterstockCategories", JSON.stringify(shutterstockCategories));
       }
@@ -933,6 +936,40 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </motion.div>
+          {/* Generation Language Selection */}
+          <motion.div variants={itemVariants}>
+            <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
+              <CardContent>
+                <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                  <Languages className="w-5 h-5 text-amber-400" />{" "}
+                  {t("generationLanguage")}
+                </h2>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => setGenerationLanguage("en")}
+                    className={`flex-1 border-2 transition-all duration-300 ${
+                      generationLanguage === "en"
+                        ? "bg-blue-500 border-blue-400 text-white shadow-md"
+                        : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
+                    }`}
+                  >
+                    {tLang("english")}
+                  </Button>
+                  <Button
+                    onClick={() => setGenerationLanguage("ar")}
+                    className={`flex-1 border-2 transition-all duration-300 ${
+                      generationLanguage === "ar"
+                        ? "bg-green-500 border-green-400 text-white shadow-md"
+                        : "bg-gray-800 border-gray-700 hover:bg-gray-700 hover:border-gray-600"
+                    }`}
+                  >
+                    {tLang("arabic")}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
           {/* Mode Selection */}
           <motion.div variants={itemVariants}>
             <Card className="bg-gray-900/50 border-gray-800 shadow-lg">
@@ -1012,8 +1049,6 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </motion.div>
-
-
 
           {/* Sliders */}
           <motion.div variants={itemVariants}>
