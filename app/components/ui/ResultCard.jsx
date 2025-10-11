@@ -117,9 +117,12 @@ export function ResultCard({
               .join(",")
               .replace(/"/g, '""')}"`;
           case "categories":
-            return `"${(fileData.meta.category || [])
-              .join(",")
-              .replace(/"/g, '""')}"`;
+            const categories =
+              platform?.toLowerCase() === "shutterstock"
+                ? (fileData.meta.category || []).slice(0, 1)
+                : fileData.meta.category || [];
+            return `"${categories.join(",").replace(/"/g, '""')}"`;
+
           case "editorial":
           case "mature content":
           case "illustration":
@@ -419,7 +422,10 @@ export function ResultCard({
                                 Category
                               </h4>
                               <div className="flex flex-wrap gap-2">
-                                {fileData.meta.category.map((cat, i) => (
+                                {(platform?.toLowerCase() === "shutterstock"
+                                  ? fileData.meta.category.slice(0, 1)
+                                  : fileData.meta.category
+                                ).map((cat, i) => (
                                   <span
                                     key={i}
                                     className="bg-purple-900/50 text-purple-200 px-3 py-1 rounded-full text-sm"

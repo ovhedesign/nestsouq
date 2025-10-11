@@ -788,8 +788,12 @@ export default function DashboardPage() {
             return escapeCell(descriptionFallback || "No description");
           case "Keywords":
             return escapeCell((keywordsArr || ["image"]).join(", "));
-          case "Categories":
-            return escapeCell(categoriesFallback || "General");
+          case "categories":
+            const categories =
+              platform?.toLowerCase() === "shutterstock"
+                ? (fileData.meta.category || []).slice(0, 1)
+                : fileData.meta.category || [];
+            return `"${categories.join(",").replace(/"/g, '""')}"`;
           case "Editorial":
             return escapeCell(editorialFlag ? "Yes" : "No");
           case "Mature content":
