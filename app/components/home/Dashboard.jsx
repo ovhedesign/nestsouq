@@ -258,6 +258,35 @@ export default function DashboardPage() {
   const resultsContainerRef = useRef(null);
   const t = useTranslations("HomePage");
 
+  const shutterstockCategories = [
+    "Abstract",
+    "Animals/Wildlife",
+    "Arts",
+    "Backgrounds/Textures",
+    "Beauty/Fashion",
+    "Buildings/Landmarks",
+    "Business/Finance",
+    "Celebrities",
+    "Education",
+    "Food and drink",
+    "Healthcare/Medical",
+    "Holidays",
+    "Industrial",
+    "Interiors",
+    "Miscellaneous",
+    "Nature",
+    "Objects",
+    "Parks/Outdoor",
+    "People",
+    "Religion",
+    "Science",
+    "Signs/Symbols",
+    "Sports/Recreation",
+    "Technology",
+    "Transportation",
+    "Vintage",
+  ];
+
   const createPreview = async (file) => {
     const fileExtension = file.name?.split(".").pop()?.toLowerCase();
     if (fileExtension === "eps") {
@@ -383,6 +412,9 @@ export default function DashboardPage() {
       fd.append("maxDesc", String(state.maxDesc));
       fd.append("uid", user.uid);
       fd.append("locale", currentLocale);
+      if (state.platform === "shutterstock") {
+        fd.append("shutterstockCategories", JSON.stringify(shutterstockCategories));
+      }
 
       const idToken = await user.getIdToken(); // Get the ID token
 
@@ -557,7 +589,7 @@ export default function DashboardPage() {
     dreamstime: ["Filename", "Title", "Description", "Keywords"],
     depositphotos: ["Filename", "Title", "Description", "Keywords"],
     vecteezy: ["Filename", "Title", "Description", "Keywords", "License"],
-    freepik: ["File name", "Title", "Keywords", "Prompt", "Base-Model"],
+    freepik: ["File name", "Title", "Keywords"],
     "123rf": [
       "oldfilename",
       "123rf_filename",
@@ -980,6 +1012,8 @@ export default function DashboardPage() {
               </CardContent>
             </Card>
           </motion.div>
+
+
 
           {/* Sliders */}
           <motion.div variants={itemVariants}>
